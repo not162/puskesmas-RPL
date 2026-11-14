@@ -1,0 +1,372 @@
+openapi: 3.0.3
+info:
+  title: Puskesmas Sehat API
+  version: 1.0.0
+  description: |
+    REST API Sistem Informasi Puskesmas (ERD Chen: Akun, Peran, Izin, Pasien, Dokter, Apoteker, Konsultasi, Resep, Obat, Penyerahan_obat).
+
+    **Autentikasi:** panggil `POST /auth/login`, salin `token`, klik tombol **Authorize** lalu isi token.
+    Akses tiap endpoint dibatasi izin peran (RBAC) — kolom `x-izin` menunjukkan izin yang dibutuhkan.
+
+    Login memakai **username atau email**. Kata sandi awal tiap peran berbeda dan disimpan di `.env` server (SEED_PASSWORD_*).
+
+    **HMAC:** endpoint `/kiosk/*` wajib header `X-Kiosk-Id`, `X-Timestamp` (unix detik, ±300 dtk) dan
+    `X-Signature` = hex HMAC-SHA256(KIOSK_HMAC_SECRET, `METHOD + "\n" + PATH + "\n" + TIMESTAMP + "\n" + SHA256(body)`), PATH tanpa domain, mis. `/api/v1/kiosk/checkin`.
+    Satu tanda tangan hanya berlaku sekali (anti-replay). Buat contoh header: `php artisan hmac:contoh POST api/v1/kiosk/checkin {"qr":"..."}`.
+
+    Endpoint `/public/*` tidak membutuhkan login dan **tidak pernah** mengembalikan ID dokter maupun data pribadi pasien.
+servers:
+  - url: /api/v1
+tags:
+  - name: Publik
+  - name: Kiosk (HMAC)
+  - name: Auth
+  - name: Notifikasi
+  - name: Antrian
+  - name: Konsultasi
+  - name: Resep
+  - name: Obat
+  - name: Pengumuman
+  - name: Pasien
+  - name: Laporan
+security:
+  - bearerAuth: []
+paths:
+  /public/antrian:
+    get:
+      tags: [Publik]
+      summary: Layar antrian real-time (tanpa data pribadi)
+      security: []
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/AntrianLive' } } } }
+  /public/dokter:
+    get:
+      tags: [Publik]
+      summary: Daftar dokter & jadwal (tanpa ID/STR)
+      security: []
+      responses: { '200': { description: OK } }
+  /public/pengumuman:
+    get:
+      tags: [Publik]
+      summary: Pengumuman terbit
+      security: []
+      responses: { '200': { description: OK } }
+  /public/alur:
+    get:
+      tags: [Publik]
+      summary: Alur 10 langkah beserta persyaratan & teks notifikasi
+      security: []
+      responses: { '200': { description: OK } }
+
+  /kiosk/antrian:
+    get:
+      tags: [Kiosk (HMAC)]
+      summary: Data layar antrean untuk perangkat TV/kiosk (wajib tanda tangan HMAC)
+      security: [{ kioskId: [], kioskTimestamp: [], kioskSignature: [] }]
+      responses: { '200': { description: OK }, '401': { description: Tanda tangan salah / kedaluwarsa / replay } }
+  /kiosk/checkin:
+    post:
+      tags: [Kiosk (HMAC)]
+      summary: Check-in mandiri dengan memindai QR tiket (QR juga ditandatangani HMAC)
+      security: [{ kioskId: [], kioskTimestamp: [], kioskSignature: [] }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [qr], properties: { qr: { type: string, example: 'PKM1.01jabcd....' } } } } } }
+      responses: { '200': { description: Check-in berhasil }, '401': { description: HMAC permintaan tidak valid }, '409': { description: Bukan jadwal hari ini / sudah check-in }, '422': { description: QR palsu } }
+
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Registrasi pasien (langkah 1)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RegisterInput' }
+      responses:
+        '201': { description: Akun dibuat, content: { application/json: { schema: { $ref: '#/components/schemas/TokenResponse' } } } }
+        '422': { $ref: '#/components/responses/Validasi' }
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Login utama semua peran → Bearer token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [login, password]
+              properties:
+                login: { type: string, example: pasien, description: Username atau email }
+                password: { type: string, format: password }
+                device: { type: string, example: android }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/TokenResponse' } } } }
+        '422': { $ref: '#/components/responses/Validasi' }
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: Profil akun & daftar izin
+      responses: { '200': { description: OK }, '401': { $ref: '#/components/responses/Unauth' } }
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Cabut token saat ini
+      responses: { '200': { description: OK } }
+
+  /notifikasi:
+    get:
+      tags: [Notifikasi]
+      summary: Notifikasi langkah layanan milik akun
+      responses: { '200': { description: OK } }
+  /notifikasi/{id}:
+    patch:
+      tags: [Notifikasi]
+      summary: Tandai notifikasi dibaca
+      parameters: [{ name: id, in: path, required: true, schema: { type: string, format: uuid } }]
+      responses: { '200': { description: OK }, '404': { description: Tidak ditemukan } }
+
+  /antrian:
+    get:
+      tags: [Antrian]
+      summary: Pasien = antrian sendiri; loket = semua antrian per tanggal
+      parameters: [{ name: tanggal, in: query, schema: { type: string, format: date } }]
+      responses: { '200': { description: OK } }
+    post:
+      tags: [Antrian]
+      summary: Ambil antrian online (langkah 5)
+      x-izin: antrian.ambil
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id_spesialisasi, tanggal]
+              properties:
+                id_spesialisasi: { type: integer, example: 1, description: '1 = Umum, 2 = Kandungan' }
+                tanggal: { type: string, format: date }
+                keluhan_awal: { type: string }
+      responses:
+        '201': { description: Dibuat, content: { application/json: { schema: { type: object, properties: { data: { $ref: '#/components/schemas/Antrian' } } } } } }
+        '422': { $ref: '#/components/responses/Validasi' }
+  /antrian/{kode}:
+    parameters: [{ name: kode, in: path, required: true, schema: { type: string }, description: ULID antrian }]
+    get:
+      tags: [Antrian]
+      summary: Detail antrian
+      responses: { '200': { description: OK }, '404': { description: Tidak ditemukan } }
+    patch:
+      tags: [Antrian]
+      summary: 'Loket: ubah status (hadir / dipanggil / batal) → notifikasi langkah 6/7'
+      x-izin: antrian.kelola
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, properties: { status: { type: string, enum: [hadir, dipanggil, batal] } } } } }
+      responses: { '200': { description: OK }, '403': { $ref: '#/components/responses/Forbidden' } }
+    delete:
+      tags: [Antrian]
+      summary: Pasien membatalkan antrian (status menunggu)
+      responses: { '204': { description: Dibatalkan }, '422': { description: Sudah check-in } }
+
+  /konsultasi:
+    get:
+      tags: [Konsultasi]
+      summary: Pasien = milik sendiri; dokter = konsultasi online poli sendiri
+      responses: { '200': { description: OK } }
+    post:
+      tags: [Konsultasi]
+      summary: Ajukan konsultasi online (langkah 3)
+      x-izin: konsultasi.ajukan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id_spesialisasi, keluhan]
+              properties:
+                id_spesialisasi: { type: integer, example: 1 }
+                keluhan: { type: string, example: Demam 3 hari disertai batuk }
+      responses: { '201': { description: Dibuat }, '422': { $ref: '#/components/responses/Validasi' } }
+  /konsultasi/{kode}:
+    parameters: [{ name: kode, in: path, required: true, schema: { type: string } }]
+    get:
+      tags: [Konsultasi]
+      summary: Detail konsultasi
+      responses: { '200': { description: OK } }
+    put:
+      tags: [Konsultasi]
+      summary: 'Dokter menanggapi (langkah 4)'
+      x-izin: konsultasi.tanggapi
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [tanggapan], properties: { tanggapan: { type: string }, diagnosis: { type: string } } } } }
+      responses: { '200': { description: OK }, '403': { $ref: '#/components/responses/Forbidden' } }
+
+  /resep:
+    get:
+      tags: [Resep]
+      summary: Pasien = resep sendiri; dokter = resep yang diterbitkan; apoteker = semua
+      parameters: [{ name: status, in: query, schema: { type: string, enum: [baru, diproses, diserahkan] } }]
+      responses: { '200': { description: OK } }
+  /resep/{kode}:
+    parameters: [{ name: kode, in: path, required: true, schema: { type: string } }]
+    get:
+      tags: [Resep]
+      summary: Detail resep + obat (detail_resep)
+      responses: { '200': { description: OK } }
+    patch:
+      tags: [Resep]
+      summary: 'Apoteker: diproses (langkah 9) / diserahkan (langkah 10, stok berkurang)'
+      x-izin: resep.proses
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, properties: { status: { type: string, enum: [diproses, diserahkan] } } } } }
+      responses: { '200': { description: OK }, '422': { description: Status/stok tidak valid } }
+
+  /obat:
+    get:
+      tags: [Obat]
+      summary: Daftar obat
+      x-izin: obat.lihat
+      parameters: [{ name: q, in: query, schema: { type: string } }]
+      responses: { '200': { description: OK } }
+    post:
+      tags: [Obat]
+      summary: Tambah obat
+      x-izin: obat.kelola
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/ObatInput' } } } }
+      responses: { '201': { description: Dibuat } }
+  /obat/{id}:
+    parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+    get: { tags: [Obat], summary: Detail obat, x-izin: obat.lihat, responses: { '200': { description: OK } } }
+    put:
+      tags: [Obat]
+      summary: Ubah obat / stok
+      x-izin: obat.kelola
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/ObatInput' } } } }
+      responses: { '200': { description: OK } }
+    delete: { tags: [Obat], summary: Hapus obat (jika belum dipakai resep), x-izin: obat.kelola, responses: { '204': { description: Dihapus }, '422': { description: Dipakai resep } } }
+
+  /pengumuman:
+    get: { tags: [Pengumuman], summary: Semua pengumuman, x-izin: pengumuman.kelola, responses: { '200': { description: OK } } }
+    post:
+      tags: [Pengumuman]
+      summary: Buat pengumuman
+      x-izin: pengumuman.kelola
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/PengumumanInput' } } } }
+      responses: { '201': { description: Dibuat } }
+  /pengumuman/{id}:
+    parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+    get: { tags: [Pengumuman], summary: Detail, x-izin: pengumuman.kelola, responses: { '200': { description: OK } } }
+    put:
+      tags: [Pengumuman]
+      summary: Ubah
+      x-izin: pengumuman.kelola
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/PengumumanInput' } } } }
+      responses: { '200': { description: OK } }
+    delete: { tags: [Pengumuman], summary: Hapus, x-izin: pengumuman.kelola, responses: { '204': { description: Dihapus } } }
+
+  /pasien:
+    get:
+      tags: [Pasien]
+      summary: Daftar pasien (staf)
+      x-izin: pasien.lihat
+      parameters: [{ name: q, in: query, schema: { type: string } }]
+      responses: { '200': { description: OK } }
+    post:
+      tags: [Pasien]
+      summary: Daftarkan pasien di loket
+      x-izin: pasien.daftar
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/PasienInput' } } } }
+      responses: { '201': { description: Dibuat } }
+  /pasien/{id}:
+    parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+    get: { tags: [Pasien], summary: Detail + riwayat, x-izin: pasien.lihat, responses: { '200': { description: OK } } }
+    put:
+      tags: [Pasien]
+      summary: Ubah data pasien
+      x-izin: pasien.daftar
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/PasienInput' } } } }
+      responses: { '200': { description: OK } }
+    delete: { tags: [Pasien], summary: Hapus pasien (super admin), x-izin: akun.kelola, responses: { '204': { description: Dihapus } } }
+
+  /laporan/bulanan:
+    get:
+      tags: [Laporan]
+      summary: Rekap bulanan (kunjungan, dokter, obat keluar)
+      x-izin: laporan.lihat
+      parameters: [{ name: bulan, in: query, schema: { type: string, example: '2026-11' } }]
+      responses: { '200': { description: OK } }
+
+components:
+  securitySchemes:
+    bearerAuth: { type: http, scheme: bearer }
+    kioskId: { type: apiKey, in: header, name: X-Kiosk-Id }
+    kioskTimestamp: { type: apiKey, in: header, name: X-Timestamp }
+    kioskSignature: { type: apiKey, in: header, name: X-Signature }
+  responses:
+    Validasi: { description: Data tidak valid, content: { application/json: { schema: { type: object, properties: { message: { type: string }, errors: { type: object } } } } } }
+    Unauth: { description: Belum login }
+    Forbidden: { description: Tidak memiliki izin }
+  schemas:
+    TokenResponse:
+      type: object
+      properties:
+        token: { type: string }
+        akun: { type: object, properties: { email: { type: string }, nama: { type: string }, peran: { type: string }, label_peran: { type: string }, izin: { type: array, items: { type: string } } } }
+    RegisterInput:
+      type: object
+      required: [nik, nama, tgl_lahir, jenis_kelamin, no_tlp, alamat, username, password, password_confirmation]
+      properties:
+        nik: { type: string, example: '3171010101990002' }
+        nama: { type: string, example: Siti Aminah }
+        tgl_lahir: { type: string, format: date, example: '1995-05-05' }
+        jenis_kelamin: { type: string, enum: [L, P] }
+        no_tlp: { type: string, example: '081298765432' }
+        alamat: { type: string }
+        username: { type: string, example: siti.aminah, pattern: '^[a-z0-9._]{4,30}$' }
+        email: { type: string, nullable: true, description: Opsional }
+        no_bpjs: { type: string, nullable: true, example: '0009876543210' }
+        password: { type: string, example: rahasia123 }
+        password_confirmation: { type: string, example: rahasia123 }
+    Antrian:
+      type: object
+      properties:
+        kode: { type: string }
+        nomor: { type: string, example: U-001 }
+        poli: { type: string }
+        tanggal: { type: string, format: date }
+        status: { type: string, enum: [menunggu, hadir, dipanggil, dilayani, selesai, batal] }
+        sumber: { type: string, enum: [online, loket] }
+        di_depan: { type: integer }
+    AntrianLive:
+      type: object
+      properties:
+        tanggal: { type: string }
+        diperbarui: { type: string }
+        poli:
+          type: array
+          items:
+            type: object
+            properties:
+              poli: { type: string }
+              sedang_dipanggil: { type: string, nullable: true }
+              berikutnya: { type: array, items: { type: string } }
+              menunggu: { type: integer }
+              selesai: { type: integer }
+              total: { type: integer }
+    ObatInput:
+      type: object
+      required: [nama_obat, satuan, stok]
+      properties: { nama_obat: { type: string }, satuan: { type: string }, stok: { type: integer } }
+    PengumumanInput:
+      type: object
+      required: [judul, isi, kategori, tanggal]
+      properties: { judul: { type: string }, isi: { type: string }, kategori: { type: string, enum: [pengumuman, agenda, edukasi] }, tanggal: { type: string, format: date }, terbit: { type: boolean } }
+    PasienInput:
+      type: object
+      required: [nik, nama]
+      properties: { nik: { type: string }, nama: { type: string }, tgl_lahir: { type: string, format: date }, jenis_kelamin: { type: string }, no_tlp: { type: string }, alamat: { type: string } }
