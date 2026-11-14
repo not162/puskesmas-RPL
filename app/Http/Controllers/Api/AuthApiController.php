@@ -2,18 +2,24 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Controller;
 use App\Models\Akun;
 use App\Models\LogLogin;
-use App\Models\Pasien;
+use App\Models\OtpKode;
 use App\Models\Peran;
-use App\Support\Notifier;
+use App\Support\CekDuplikat;
+use App\Support\Otp;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
 
+/**
+ * Login & registrasi API.
+ *  - Pasien: login dan registrasi dua langkah (kode OTP email).
+ *  - Petugas: login langsung mendapat token.
+ */
 class AuthApiController extends Controller
 {
     public function login(Request $request)
@@ -26,24 +32,49 @@ class AuthApiController extends Controller
         if (! $ok) {
             throw ValidationException::withMessages(['login' => 'Username/email atau password salah, atau akun nonaktif.']);
         }
-        return ['token' => $akun->createToken($data['device'] ?? 'api', $akun->daftarIzin() ?: ['*'])->plainTextToken, 'akun' => $this->profil($akun)];
+        if ($akun->hasRole(Peran::PASIEN) && $akun->email) {
+            $otp = Otp::kirim($akun->email, 'login', ['device' => $data['device'] ?? 'api'], $akun->id_akun);
+            return response()->json(['message' => 'Kode OTP dikirim ke email.', 'otp_ref' => $otp->ref, 'email' => $otp->emailSamaran()], 202);
+        }
+        return $this->token($akun, $data['device'] ?? 'api');
+    }
+
+    public function verifikasiLogin(Request $request)
+    {
+        $data = $request->validate(['otp_ref' => 'required|string', 'kode' => 'required|digits:6']);
+        $otp = Otp::verifikasi(OtpKode::where('ref', $data['otp_ref'])->where('tujuan', 'login')->first(), $data['kode']);
+        return $this->token(Akun::with('peran')->findOrFail($otp->id_akun), $otp->payload['device'] ?? 'api');
     }
 
     public function register(Request $request)
     {
+        $ganda = CekDuplikat::cari($request->only('username', 'email', 'nik', 'nama', 'no_kk'));
+        if ($ganda) {
+            return response()->json(['message' => CekDuplikat::pesan($ganda).' sudah terdaftar. Silakan login atau gunakan lupa password.', 'terdaftar' => $ganda], 409);
+        }
         $data = $request->validate([
-            'nik' => 'required|digits:16|unique:pasien,nik', 'nama' => 'required|max:100', 'tgl_lahir' => 'required|date|before:today',
-            'jenis_kelamin' => 'required|in:L,P', 'no_tlp' => ['required', 'regex:/^(\+62|0)8[0-9]{8,12}$/'], 'alamat' => 'required|max:500',
-            'username' => ['required', 'regex:/^[a-z0-9._]{4,30}$/', 'unique:akun,username'], 'email' => 'nullable|email|unique:akun,email',
+            'nik' => 'required|digits:16', 'no_kk' => 'required|digits:16', 'nama' => 'required|max:100', 'tgl_lahir' => 'required|date|before:today',
+            'jenis_kelamin' => 'required|in:L,P', 'no_tlp' => ['required', 'regex:/^(\+62|62|0)8[0-9]{8,12}$/'], 'alamat' => 'required|max:500',
+            'username' => ['required', 'regex:/^[a-z0-9._]{4,30}$/'], 'email' => 'required|email:rfc|max:100',
             'no_bpjs' => 'nullable|digits:13|unique:pasien,no_bpjs', 'password' => ['required', 'confirmed', Password::min(8)],
         ]);
-        $pasien = DB::transaction(function () use ($data) {
-            $akun = Akun::create(['id_peran' => Peran::where('nama_peran', Peran::PASIEN)->value('id_peran'), 'username' => $data['username'], 'email' => $data['email'] ?? null, 'password' => $data['password']]);
-            return Pasien::create(collect($data)->except('username', 'email', 'password', 'password_confirmation')->all() + ['id_akun' => $akun->id_akun, 'no_rm' => Pasien::nomorRmBaru()]);
-        });
-        Notifier::pasien($pasien, 1, ['no_rm' => $pasien->no_rm], null, 'success');
-        $akun = $pasien->akun->load('peran');
-        return response()->json(['token' => $akun->createToken('api')->plainTextToken, 'akun' => $this->profil($akun)], 201);
+        $payload = collect($data)->except('password', 'password_confirmation')->all();
+        $payload['username'] = strtolower($payload['username']);
+        $payload['email'] = strtolower($payload['email']);
+        $payload['password'] = Hash::make($data['password']);
+        $otp = Otp::kirim($payload['email'], 'registrasi', $payload);
+        return response()->json(['message' => 'Kode OTP dikirim ke email.', 'otp_ref' => $otp->ref, 'email' => $otp->emailSamaran()], 202);
+    }
+
+    public function verifikasiRegister(Request $request)
+    {
+        $data = $request->validate(['otp_ref' => 'required|string', 'kode' => 'required|digits:6']);
+        $otp = Otp::verifikasi(OtpKode::where('ref', $data['otp_ref'])->where('tujuan', 'registrasi')->first(), $data['kode']);
+        $pasien = AuthController::buatPasienDariPayload($otp->payload);
+        if (! $pasien) {
+            return response()->json(['message' => 'Data sudah terdaftar. Silakan login atau gunakan lupa password.'], 409);
+        }
+        return $this->token($pasien->akun->load('peran'), 'api', 201);
     }
 
     public function me(Request $request) { return ['akun' => $this->profil($request->user()->load('peran'))]; }
@@ -54,9 +85,13 @@ class AuthApiController extends Controller
         return ['message' => 'Token dicabut.'];
     }
 
+    private function token(Akun $akun, string $device, int $status = 200)
+    {
+        return response()->json(['token' => $akun->createToken($device, $akun->daftarIzin() ?: ['*'])->plainTextToken, 'akun' => $this->profil($akun)], $status);
+    }
+
     private function profil(Akun $a): array
     {
         return ['username' => $a->username, 'email' => $a->email, 'nama' => $a->namaTampil(), 'peran' => $a->role(), 'label_peran' => $a->peran->label, 'izin' => $a->role() === Peran::SUPER_ADMIN ? ['*'] : $a->daftarIzin()];
     }
 }
-

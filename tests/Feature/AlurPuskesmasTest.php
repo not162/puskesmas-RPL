@@ -10,11 +10,11 @@ use App\Models\Konsultasi;
 use App\Models\Obat;
 use App\Models\Resep;
 use App\Support\Hmac;
-use Illuminate\Auth\Notifications\ResetPassword;
+use App\Mail\KodeOtpMail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -27,6 +27,20 @@ class AlurPuskesmasTest extends TestCase
     private function akun(string $username): Akun
     {
         return Akun::where('username', $username)->firstOrFail();
+    }
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        Mail::fake();
+    }
+
+    /** Kode OTP terakhir yang dikirim lewat email (SMTP dipalsukan di test). */
+    private function kodeOtp(?string $email = null): string
+    {
+        $m = Mail::sent(KodeOtpMail::class, fn ($mail) => $email === null || $mail->hasTo($email))->last();
+        $this->assertNotNull($m, 'Email OTP tidak terkirim');
+        return $m->kode;
     }
 
     private function sandi(string $peran): string
@@ -51,7 +65,14 @@ class AlurPuskesmasTest extends TestCase
         $this->assertCount(7, array_unique(array_map(fn ($p) => $this->sandi($p), $peran)));
 
         foreach ($peran as $username => $p) {
-            $this->withSession(['captcha' => 7])->post('/login', ['login' => $username, 'password' => $this->sandi($p), 'captcha' => 7])->assertRedirect('/dashboard');
+            $res = $this->withSession(['captcha' => 7])->post('/login', ['login' => $username, 'password' => $this->sandi($p), 'captcha' => 7]);
+            if ($p === 'pasien') {
+                $res->assertRedirect('/login/verifikasi');
+                $this->assertGuest();
+                $this->post('/login/verifikasi', ['kode' => '000000'])->assertSessionHasErrors('kode');
+                $res = $this->post('/login/verifikasi', ['kode' => $this->kodeOtp('pasien@puskesmas.test'), 'percaya' => '1']);
+            }
+            $res->assertRedirect('/dashboard');
             $this->assertSame($p, auth()->user()->role());
             $this->get('/dashboard')->assertOk();
             $this->post('/logout');
@@ -65,12 +86,36 @@ class AlurPuskesmasTest extends TestCase
         $this->withSession(['captcha' => 3])->post('/login', ['login' => 'apoteker@puskesmas.test', 'password' => $this->sandi('apoteker'), 'captcha' => 3])->assertRedirect('/dashboard');
     }
 
-    public function test_lupa_password_mengirim_tautan_reset(): void
+    public function test_lupa_password_dengan_otp_email(): void
     {
-        Notification::fake();
-        $this->post('/lupa-password', ['login' => 'pasien'])->assertSessionHas('terkirim');
-        Notification::assertSentTo($this->akun('pasien'), ResetPassword::class);
-        $this->post('/lupa-password', ['login' => 'tidak.ada'])->assertSessionHas('terkirim'); // pesan sama, tidak bocor
+        $this->post('/lupa-password', ['login' => 'tidak.ada'])->assertRedirect('/lupa-password/verifikasi'); // respons sama, tidak bocor
+        Mail::assertNothingSent();
+
+        $this->post('/lupa-password', ['login' => 'pasien'])->assertRedirect('/lupa-password/verifikasi');
+        Mail::assertSent(KodeOtpMail::class, fn ($m) => $m->hasTo('pasien@puskesmas.test') && $m->tujuan === 'reset');
+        $this->post('/lupa-password/verifikasi', ['kode' => '123123', 'password' => 'BaruSekali9', 'password_confirmation' => 'BaruSekali9'])->assertSessionHasErrors('kode');
+        $this->post('/lupa-password/verifikasi', ['kode' => $this->kodeOtp(), 'password' => 'BaruSekali9', 'password_confirmation' => 'BaruSekali9'])->assertRedirect('/login');
+        $this->assertTrue(\Illuminate\Support\Facades\Hash::check('BaruSekali9', $this->akun('pasien')->fresh()->password));
+    }
+
+    public function test_data_ganda_diarahkan_ke_login_atau_lupa_password(): void
+    {
+        $dasar = ['nik' => '3171010101990077', 'no_kk' => '3171010101990000', 'nama' => 'Pasien Baru', 'tgl_lahir' => '1990-02-02', 'jenis_kelamin' => 'L',
+            'alamat' => 'Jl. B', 'username' => 'pasien.baru', 'no_tlp' => '081211113333', 'email' => 'pasien.baru@gmail.com',
+            'password' => 'rahasia123', 'password_confirmation' => 'rahasia123', 'setuju' => '1'];
+        foreach ([['username' => 'pasien'], ['email' => 'pasien@puskesmas.test'], ['nik' => '3171010101900001'], ['nama' => '  budi   SANTOSO '], ['no_kk' => '3171010101900099']] as $i => $ubah) {
+            if ($i === 4) \App\Models\Pasien::where('nik', '3171010101900001')->update(['no_kk' => '3171010101900099']);
+            $this->post('/register', array_merge($dasar, $ubah))->assertRedirect('/login')->assertSessionHas('duplikat');
+        }
+        Mail::assertNothingSent();
+        $this->getJson('/register/cek?kolom=username&nilai=pasien')->assertJson(['terdaftar' => true]);
+        $this->getJson('/register/cek?kolom=username&nilai=belum.ada')->assertJson(['terdaftar' => false]);
+
+        // Data baru lolos -> OTP dikirim ke email pengguna, akun baru dibuat setelah kode benar
+        $this->post('/register', $dasar)->assertRedirect('/register/verifikasi');
+        $this->assertNull(Akun::where('username', 'pasien.baru')->first());
+        $this->post('/register/verifikasi', ['kode' => $this->kodeOtp('pasien.baru@gmail.com')])->assertRedirect('/dashboard');
+        $this->assertSame('3171010101990000', Akun::where('username', 'pasien.baru')->first()->pasien->no_kk);
     }
 
     public function test_alur_lengkap_dengan_notifikasi_qr_hmac_dan_realtime(): void
@@ -81,17 +126,18 @@ class AlurPuskesmasTest extends TestCase
         // 1. Registrasi (hanya pasien) — form sesuai layout
         $this->post('/register', [
             'nik' => '3171010101990002', 'nama' => 'Siti Aminah', 'tgl_lahir' => '1995-05-05', 'jenis_kelamin' => 'P',
-            'alamat' => 'Jl. Mawar 1', 'username' => 'siti.aminah', 'no_tlp' => '081298765432', 'email' => '',
+            'alamat' => 'Jl. Mawar 1', 'username' => 'siti.aminah', 'no_tlp' => '081298765432', 'email' => 'siti.aminah@gmail.com', 'no_kk' => '3171010101990111',
             'no_bpjs' => '0009876543210', 'password' => 'rahasia123', 'password_confirmation' => 'rahasia123',
             'foto_ktp' => UploadedFile::fake()->image('ktp.jpg'), 'setuju' => '1',
-        ])->assertRedirect('/dashboard');
+        ])->assertRedirect('/register/verifikasi');
+        $this->post('/register/verifikasi', ['kode' => $this->kodeOtp('siti.aminah@gmail.com')])->assertRedirect('/dashboard');
         $siti = Akun::where('username', 'siti.aminah')->first();
         $this->assertSame('pasien', $siti->role());
-        $this->assertNull($siti->email);
+        $this->assertSame('siti.aminah@gmail.com', $siti->email);
         Storage::disk('local')->assertExists($siti->pasien->foto_ktp);
         // Username duplikat ditolak
         $this->post('/logout');
-        $this->post('/register', ['username' => 'siti.aminah', 'nik' => '3171010101990003'])->assertSessionHasErrors(['username']);
+        $this->post('/register', ['username' => 'siti.aminah', 'nik' => '3171010101990003'])->assertRedirect('/login')->assertSessionHas('duplikat', 'Username');
 
         // Loket mendapat notifikasi pasien baru (real-time lintas peran)
         $this->assertTrue($this->akun('loket')->notifications()->where('data->judul', 'like', 'Pasien baru%')->exists());
@@ -232,9 +278,14 @@ class AlurPuskesmasTest extends TestCase
         $this->getJson('/api/v1/laporan/bulanan', $h)->assertForbidden();
 
         $this->app['auth']->forgetGuards();
-        $this->postJson('/api/v1/auth/register', [
-            'nik' => '3171010101990009', 'nama' => 'Ani', 'tgl_lahir' => '2000-01-01', 'jenis_kelamin' => 'P', 'no_tlp' => '081211112222',
-            'alamat' => 'Jl. A', 'username' => 'ani_01', 'password' => 'rahasia123', 'password_confirmation' => 'rahasia123',
-        ])->assertCreated()->assertJsonPath('akun.username', 'ani_01');
+        $ref = $this->postJson('/api/v1/auth/register', [
+            'nik' => '3171010101990009', 'no_kk' => '3171010101990010', 'nama' => 'Ani', 'tgl_lahir' => '2000-01-01', 'jenis_kelamin' => 'P', 'no_tlp' => '081211112222',
+            'alamat' => 'Jl. A', 'username' => 'ani_01', 'email' => 'ani01@gmail.com', 'password' => 'rahasia123', 'password_confirmation' => 'rahasia123',
+        ])->assertStatus(202)->json('otp_ref');
+        $this->postJson('/api/v1/auth/register/verifikasi', ['otp_ref' => $ref, 'kode' => $this->kodeOtp('ani01@gmail.com')])->assertCreated()->assertJsonPath('akun.username', 'ani_01');
+        $this->postJson('/api/v1/auth/register', ['username' => 'ani_01'])->assertStatus(409);
+        $this->app['auth']->forgetGuards();
+        $ref = $this->postJson('/api/v1/auth/login', ['login' => 'ani_01', 'password' => 'rahasia123'])->assertStatus(202)->json('otp_ref');
+        $this->postJson('/api/v1/auth/login/verifikasi', ['otp_ref' => $ref, 'kode' => $this->kodeOtp('ani01@gmail.com')])->assertOk()->assertJsonStructure(['token']);
     }
 }

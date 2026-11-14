@@ -82,6 +82,7 @@
       </div>
     </header>
     <div class="content">@yield('content')</div>
+    <footer class="app-footer">🇮🇩 Dibuat di Indonesia · © 2026 Seluruh hak cipta dilindungi · Grup NussCorp Technologies Indonesia</footer>
   </div>
 </div>
 <nav class="bottomnav" aria-label="Navigasi bawah">

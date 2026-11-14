@@ -19,6 +19,8 @@ class Pengaturan extends Model
         'jam_layanan' => 'Senin–Sabtu 07.30–14.00 WIB · IGD 24 jam',
         'maps_url' => 'https://maps.google.com/?q=puskesmas',
         'maks_hari_antrean' => '7',
+        'tolak_nama_ganda' => '1',
+        'tolak_kk_ganda' => '1',
     ];
 
     protected $table = 'pengaturan';

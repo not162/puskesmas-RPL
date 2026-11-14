@@ -14,6 +14,10 @@
     </div>
     @include('partials.field', ['name' => 'jam_layanan', 'label' => 'Jam layanan', 'value' => $nilai['jam_layanan']])
     @include('partials.field', ['name' => 'maps_url', 'label' => 'Tautan Google Maps', 'type' => 'url', 'value' => $nilai['maps_url']])
+    <h3 class="mt">Pencegahan pendaftaran ganda</h3>
+    <p class="muted">Username, email, dan NIK selalu ditolak bila sudah terdaftar.</p>
+    <label class="check field"><input type="checkbox" name="tolak_nama_ganda" value="1" @checked($nilai['tolak_nama_ganda'] !== '0')> Tolak nama lengkap yang sama</label>
+    <label class="check field"><input type="checkbox" name="tolak_kk_ganda" value="1" @checked($nilai['tolak_kk_ganda'] !== '0')> Tolak Nomor KK yang sama (matikan bila satu keluarga mendaftar sendiri-sendiri)</label>
     <button class="btn btn-primary">Simpan pengaturan</button>
   </form>
   <div>
@@ -28,6 +32,7 @@
         <li><span>Tanda tangan QR tiket</span><span class="badge b-ok">HMAC-SHA256</span></li>
         <li><span>API kiosk (X-Signature, anti-replay {{ config('hmac.jendela') }} dtk)</span><span class="badge {{ config('hmac.kiosk') ? 'b-ok' : 'b-bad' }}">{{ config('hmac.kiosk') ? count(config('hmac.kiosk')).' kiosk terdaftar' : 'belum diatur' }}</span></li>
         <li><span>Verifikasi login</span><span class="badge b-ok">Soal hitung + rate limit</span></li>
+        <li><span>OTP email (daftar, lupa password, perangkat baru)</span><span class="badge {{ config('mail.default') === 'smtp' ? 'b-ok' : 'b-warn' }}">{{ config('mail.default') === 'smtp' ? 'SMTP '.config('mail.mailers.smtp.host') : 'Mode log (SMTP belum diatur)' }}</span></li>
       </ul></div>
   </div>
 </div>

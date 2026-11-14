@@ -4,6 +4,7 @@
 @php
   $menuPublik = [['beranda', 'Beranda', null], ['beranda', 'Layanan', '#layanan'], ['layar', 'Antrean', null], ['publik.dokter', 'Jadwal', null], ['beranda', 'Bantuan', '#bantuan']];
 @endphp
+<div class="topstrip"><div class="container"><span>🇮🇩 Dibuat di Indonesia</span><span class="hide-sm">Layanan kesehatan masyarakat · {{ $pengaturan['jam_layanan'] }}</span></div></div>
 <header class="topnav">
   <div class="container">
     <a href="{{ route('beranda') }}" class="brand"><span class="brand-mark"><x-ico n="cross"/></span> {{ $namaPkm }}</a>
@@ -29,7 +30,8 @@
     <nav class="footnav" aria-label="Navigasi bawah">
       @foreach ($menuPublik as [$rt, $label, $hash])<a href="{{ route($rt).($hash ?? '') }}">{{ $label }}</a>@endforeach
     </nav>
-    <p class="mb0">© {{ date('Y') }} {{ $namaPkm }} · {{ $pengaturan['alamat'] }} · <a href="{{ route('privasi') }}">Kebijakan Privasi</a> · <a href="{{ route('swagger') }}">API</a></p>
+    <p class="mb0">{{ $namaPkm }} · {{ $pengaturan['alamat'] }} · <a href="{{ route('privasi') }}">Kebijakan Privasi</a> · <a href="{{ route('swagger') }}">API</a></p>
+    <p class="copyright">🇮🇩 Dibuat di Indonesia · © 2026 Seluruh hak cipta dilindungi · Grup NussCorp Technologies Indonesia</p>
   </div>
 </footer>
 @endsection

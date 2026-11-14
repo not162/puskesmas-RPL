@@ -44,7 +44,30 @@ Tidak ada akun demo di halaman login. Semua peran masuk dari **gateway** `/login
 
 Kata sandi awal **berbeda untuk tiap peran** dan dibaca seeder dari `.env` (`SEED_PASSWORD_SUPER_ADMIN`, `…_ADMIN`, `…_DOKTER_UMUM`, `…_DOKTER_KANDUNGAN`, `…_APOTEKER`, `…_LOKET`, `…_PASIEN`). Ganti setelah login pertama lewat **Profil**. Jika `.env` baru disalin dari `.env.example`, isi dulu nilai-nilai tersebut (min. 8 karakter) sebelum `migrate --seed`.
 
-**Lupa password:** `/lupa-password` mengirim tautan reset (berlaku 60 menit) ke email akun. Di lokal `MAIL_MAILER=log`, jadi tautan muncul di `storage/logs/laravel.log`. Pasien tanpa email meminta reset di loket; petugas direset Super Admin di menu Akun Staf.
+**Pendaftaran tanpa data ganda:** username, email, NIK, nama lengkap, atau Nomor KK yang sudah terdaftar langsung diarahkan ke halaman masuk dengan pesan dan tautan *Lupa password* (peringatan juga muncul saat mengetik). Cek nama dan No. KK bisa dimatikan di **Pengaturan** (mis. agar anggota satu keluarga bisa mendaftar sendiri-sendiri). Pasien yang dulu didaftarkan loket tanpa akun tetap bisa menautkan akun lewat NIK yang sama.
+
+## Kode OTP lewat email (SMTP)
+
+Kode 6 digit dikirim ke email pengguna (mis. `@gmail.com`) untuk:
+
+1. **Registrasi** — akun baru dibuat setelah kode benar (email terverifikasi).
+2. **Lupa password** — kode + password baru di `/lupa-password`.
+3. **Login pasien dari perangkat baru** — setelah lolos, perangkat bisa dipercaya 30 hari.
+
+Kode berlaku 10 menit, maksimal 5 kali salah, kirim ulang tiap 60 detik, dan disimpan sebagai HMAC (bukan teks asli).
+
+Agar email benar-benar terkirim ke Gmail, isi di `.env`:
+
+```
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=alamat-gmail-pengirim@gmail.com
+MAIL_PASSWORD=sandi-aplikasi-16-karakter
+MAIL_FROM_ADDRESS=alamat-gmail-pengirim@gmail.com
+```
+
+Sandi aplikasi dibuat di akun Google → Keamanan → Verifikasi 2 Langkah → Sandi aplikasi. Lalu jalankan `php artisan config:clear`. Selama `MAIL_MAILER=log`, kode OTP ditulis ke `storage/logs/laravel.log`.
 
 ## Navigasi per peran (sidebar desktop, bottom-nav ponsel)
 
@@ -143,6 +166,10 @@ php artisan test
 ```
 
 Mencakup login 7 peran (password berbeda, captcha), lupa password, registrasi pasien + upload KTP, alur 10 langkah beserta notifikasi, QR HMAC asli vs palsu, API kiosk (tanda tangan salah/kedaluwarsa/replay), real-time, navigasi & pembatasan tiap peran, pengaduan, audit, dan CRUD API.
+
+## Hak cipta
+
+🇮🇩 Dibuat di Indonesia · © 2026 Seluruh hak cipta dilindungi · Grup NussCorp Technologies Indonesia
 
 ## Struktur penting
 

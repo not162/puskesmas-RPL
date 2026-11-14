@@ -37,13 +37,21 @@ Route::view('/api/docs', 'swagger')->name('swagger');
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'formLogin'])->name('login');
     Route::get('/pasien/masuk', [AuthController::class, 'formLoginPasien'])->name('login.pasien');
-    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:20,1');
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:20,1,login');
     Route::get('/register', [AuthController::class, 'formRegister'])->name('register');
-    Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:10,1');
+    Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:10,1,register');
+    Route::get('/register/cek', [AuthController::class, 'cekRegister'])->middleware('throttle:40,1,register-cek')->name('register.cek');
+    Route::get('/register/verifikasi', [AuthController::class, 'formOtpRegister'])->name('register.otp');
+    Route::post('/register/verifikasi', [AuthController::class, 'verifikasiOtpRegister'])->middleware('throttle:10,1,register-verifikasi');
+    Route::post('/register/kirim-ulang', [AuthController::class, 'kirimUlangOtpRegister'])->middleware('throttle:5,1,register-kirim-ulang')->name('register.otp.ulang');
+    Route::get('/login/verifikasi', [AuthController::class, 'formOtpLogin'])->name('login.otp');
+    Route::post('/login/verifikasi', [AuthController::class, 'verifikasiOtpLogin'])->middleware('throttle:10,1,login-verifikasi');
+    Route::post('/login/kirim-ulang', [AuthController::class, 'kirimUlangOtpLogin'])->middleware('throttle:5,1,login-kirim-ulang')->name('login.otp.ulang');
+    Route::get('/lupa-password/verifikasi', [AuthController::class, 'formOtpReset'])->name('password.otp');
+    Route::post('/lupa-password/verifikasi', [AuthController::class, 'simpanResetOtp'])->middleware('throttle:10,1,lupa-password-verifikasi');
+    Route::post('/lupa-password/kirim-ulang', [AuthController::class, 'kirimUlangOtpReset'])->middleware('throttle:5,1,lupa-password-kirim-ulang')->name('password.otp.ulang');
     Route::get('/lupa-password', [AuthController::class, 'formLupa'])->name('password.request');
-    Route::post('/lupa-password', [AuthController::class, 'kirimLupa'])->middleware('throttle:5,1')->name('password.email');
-    Route::get('/reset-password/{token}', [AuthController::class, 'formReset'])->name('password.reset');
-    Route::post('/reset-password', [AuthController::class, 'simpanReset'])->middleware('throttle:10,1')->name('password.update');
+    Route::post('/lupa-password', [AuthController::class, 'kirimLupa'])->middleware('throttle:5,1,lupa-password')->name('password.email');
 });
 
 Route::middleware(['auth', 'aktif'])->group(function () {
@@ -92,7 +100,7 @@ Route::middleware(['auth', 'aktif'])->group(function () {
             Route::post('antrean/{antrian}/panggil', [Loket\AntrianController::class, 'panggil'])->name('antrian.panggil');
             Route::post('antrean/{antrian}/batal', [Loket\AntrianController::class, 'batal'])->name('antrian.batal');
             Route::get('checkin-qr', [Loket\CheckinQrController::class, 'form'])->name('qr');
-            Route::post('checkin-qr', [Loket\CheckinQrController::class, 'proses'])->middleware('throttle:60,1');
+            Route::post('checkin-qr', [Loket\CheckinQrController::class, 'proses'])->middleware('throttle:60,1,checkin-qr');
         });
         Route::middleware('izin:pasien.daftar')->group(function () {
             Route::get('pendaftaran', [Loket\CheckinQrController::class, 'pendaftaran'])->name('pendaftaran');

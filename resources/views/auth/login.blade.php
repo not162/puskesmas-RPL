@@ -16,6 +16,9 @@
     <div class="card auth-card">
       <h1 style="font-size:26px;font-weight:800">Masuk</h1>
       <p class="muted">Masuk untuk melanjutkan ke dasbor Anda.</p>
+      @if (session('duplikat'))
+        <div class="alert alert-warn"><x-ico n="alert"/><div><b>{{ session('duplikat') }} sudah terdaftar.</b><br>Masuk dengan akun Anda, atau <a href="{{ route('password.request') }}">atur ulang password lewat kode OTP email</a>.</div></div>
+      @endif
       <form method="POST" action="{{ route('login') }}" novalidate>
         @csrf
         <div class="field"><label for="login">Email atau username</label>

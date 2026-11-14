@@ -13,7 +13,7 @@ class Pasien extends Model
 
     protected $table = 'pasien';
     protected $primaryKey = 'id_pasien';
-    protected $fillable = ['id_akun', 'no_rm', 'nik', 'no_bpjs', 'foto_ktp', 'nama', 'tgl_lahir', 'jenis_kelamin', 'alamat', 'no_tlp'];
+    protected $fillable = ['id_akun', 'no_rm', 'nik', 'no_kk', 'no_bpjs', 'foto_ktp', 'nama', 'tgl_lahir', 'jenis_kelamin', 'alamat', 'no_tlp'];
     protected $casts = ['tgl_lahir' => 'date'];
 
     public function akun(): BelongsTo { return $this->belongsTo(Akun::class, 'id_akun'); }

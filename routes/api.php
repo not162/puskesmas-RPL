@@ -15,13 +15,15 @@ Route::prefix('v1')->group(function () {
     Route::get('public/alur', [Api\PublicApiController::class, 'alur']);
 
     // Kiosk / layar TV — permintaan wajib ditandatangani HMAC-SHA256 (X-Kiosk-Id, X-Timestamp, X-Signature)
-    Route::middleware(['hmac', 'throttle:120,1'])->prefix('kiosk')->group(function () {
+    Route::middleware(['hmac', 'throttle:120,1,kiosk'])->prefix('kiosk')->group(function () {
         Route::get('antrian', [Api\KioskApiController::class, 'antrian']);
         Route::post('checkin', [Api\KioskApiController::class, 'checkin']);
     });
 
-    Route::post('auth/register', [Api\AuthApiController::class, 'register'])->middleware('throttle:10,1');
-    Route::post('auth/login', [Api\AuthApiController::class, 'login'])->middleware('throttle:10,1');
+    Route::post('auth/register', [Api\AuthApiController::class, 'register'])->middleware('throttle:10,1,auth-register');
+    Route::post('auth/login', [Api\AuthApiController::class, 'login'])->middleware('throttle:10,1,auth-login');
+    Route::post('auth/login/verifikasi', [Api\AuthApiController::class, 'verifikasiLogin'])->middleware('throttle:10,1,auth-login-verifikasi');
+    Route::post('auth/register/verifikasi', [Api\AuthApiController::class, 'verifikasiRegister'])->middleware('throttle:10,1,auth-register-verifikasi');
 
     Route::middleware(['auth:sanctum', 'aktif'])->group(function () {
         Route::get('auth/me', [Api\AuthApiController::class, 'me']);

@@ -75,7 +75,7 @@ paths:
   /auth/register:
     post:
       tags: [Auth]
-      summary: Registrasi pasien (langkah 1)
+      summary: "Registrasi pasien langkah 1: cek data ganda lalu kirim OTP ke email (202). Data sudah terdaftar -> 409"
       security: []
       requestBody:
         required: true
@@ -83,12 +83,27 @@ paths:
           application/json:
             schema: { $ref: '#/components/schemas/RegisterInput' }
       responses:
-        '201': { description: Akun dibuat, content: { application/json: { schema: { $ref: '#/components/schemas/TokenResponse' } } } }
+        '202': { description: Kode OTP dikirim, content: { application/json: { schema: { $ref: '#/components/schemas/OtpResponse' } } } }
+        '409': { description: Username/email/NIK/nama/No. KK sudah terdaftar - arahkan ke login atau lupa password }
         '422': { $ref: '#/components/responses/Validasi' }
+  /auth/register/verifikasi:
+    post:
+      tags: [Auth]
+      summary: Registrasi langkah 2 - verifikasi kode OTP email, akun dibuat
+      security: []
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/OtpInput' } } } }
+      responses: { '201': { description: Akun dibuat + token }, '422': { description: Kode salah / kedaluwarsa } }
+  /auth/login/verifikasi:
+    post:
+      tags: [Auth]
+      summary: Login pasien langkah 2 - verifikasi kode OTP email
+      security: []
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/OtpInput' } } } }
+      responses: { '200': { description: Token }, '422': { description: Kode salah / kedaluwarsa } }
   /auth/login:
     post:
       tags: [Auth]
-      summary: Login utama semua peran → Bearer token
+      summary: "Login semua peran. Petugas -> token (200); pasien -> OTP email (202, lanjut /auth/login/verifikasi)"
       security: []
       requestBody:
         required: true
@@ -312,6 +327,13 @@ components:
     Unauth: { description: Belum login }
     Forbidden: { description: Tidak memiliki izin }
   schemas:
+    OtpResponse:
+      type: object
+      properties: { message: { type: string }, otp_ref: { type: string }, email: { type: string, example: s*********h@gmail.com } }
+    OtpInput:
+      type: object
+      required: [otp_ref, kode]
+      properties: { otp_ref: { type: string }, kode: { type: string, example: '123456' } }
     TokenResponse:
       type: object
       properties:
@@ -319,7 +341,7 @@ components:
         akun: { type: object, properties: { email: { type: string }, nama: { type: string }, peran: { type: string }, label_peran: { type: string }, izin: { type: array, items: { type: string } } } }
     RegisterInput:
       type: object
-      required: [nik, nama, tgl_lahir, jenis_kelamin, no_tlp, alamat, username, password, password_confirmation]
+      required: [nik, no_kk, nama, tgl_lahir, jenis_kelamin, no_tlp, alamat, username, email, password, password_confirmation]
       properties:
         nik: { type: string, example: '3171010101990002' }
         nama: { type: string, example: Siti Aminah }
@@ -327,8 +349,9 @@ components:
         jenis_kelamin: { type: string, enum: [L, P] }
         no_tlp: { type: string, example: '081298765432' }
         alamat: { type: string }
+        no_kk: { type: string, example: '3171010101990111' }
         username: { type: string, example: siti.aminah, pattern: '^[a-z0-9._]{4,30}$' }
-        email: { type: string, nullable: true, description: Opsional }
+        email: { type: string, example: siti.aminah@gmail.com, description: Tujuan kode OTP }
         no_bpjs: { type: string, nullable: true, example: '0009876543210' }
         password: { type: string, example: rahasia123 }
         password_confirmation: { type: string, example: rahasia123 }

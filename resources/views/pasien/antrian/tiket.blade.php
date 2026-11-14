@@ -23,6 +23,7 @@
   @include('partials.qr', ['isi' => \App\Support\Hmac::qrTiket($a)])
   <p class="m">Pindai QR ini di loket / kiosk untuk check-in. Bawa KTP.</p>
   <div class="k">Kode verifikasi: {{ $a->kode }}</div>
+  <p class="m" style="font-size:11px;margin-top:12px">Dibuat di Indonesia · © 2026 Seluruh hak cipta dilindungi · Grup NussCorp Technologies Indonesia</p>
   @if (!empty($cetak))<p class="np"><button onclick="print()">Cetak / Simpan PDF</button></p><script>setTimeout(()=>print(),400)</script>@endif
 </div>
 </body></html>
