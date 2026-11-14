@@ -26,7 +26,7 @@ class Akun extends Authenticatable
 
     protected function casts(): array
     {
-        return ['password' => 'hashed'];
+        return ['password' => 'hashed', 'terkunci_sampai' => 'datetime'];
     }
 
     public function peran(): BelongsTo { return $this->belongsTo(Peran::class, 'id_peran'); }
@@ -67,6 +67,11 @@ class Akun extends Authenticatable
     {
         return $this->pasien?->nama ?? $this->dokter?->nama ?? $this->apoteker?->nama
             ?? $this->admin?->nama ?? $this->petugasLoket?->nama ?? $this->email;
+    }
+
+    public function terkunci(): bool
+    {
+        return $this->terkunci_sampai !== null && $this->terkunci_sampai->isFuture();
     }
 
     public function aktif(): bool

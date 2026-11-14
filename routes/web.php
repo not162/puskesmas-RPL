@@ -148,6 +148,7 @@ Route::middleware(['auth', 'aktif'])->group(function () {
         Route::middleware('izin:akun.kelola')->group(function () {
             Route::resource('akun', Admin\AkunController::class)->except('show');
             Route::post('akun/{akun}/status', [Admin\AkunController::class, 'status'])->name('akun.status');
+            Route::post('akun/{akun}/buka-kunci', [Admin\AkunController::class, 'bukaKunci'])->name('akun.bukaKunci');
             Route::get('pasien', [Admin\PasienController::class, 'index'])->name('pasien.index');
             Route::delete('pasien/{pasien}', [Admin\PasienController::class, 'destroy'])->name('pasien.destroy');
         });

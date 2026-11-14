@@ -22,6 +22,9 @@ class Pengaturan extends Model
         'kota' => 'Kota Sejahtera',
         'kepala_puskesmas' => '',
         'nip_kepala' => '',
+        'otp_petugas' => '',
+        'maks_gagal_login' => '5',
+        'menit_kunci' => '15',
         'tolak_nama_ganda' => '1',
         'tolak_kk_ganda' => '1',
     ];

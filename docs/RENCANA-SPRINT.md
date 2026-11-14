@@ -8,8 +8,8 @@ Status: ✅ selesai · 🔄 berjalan · ⏳ menunggu persetujuan · ⬜ belum di
 | 1 | Analisis kebutuhan | Inventaris kekurangan, prioritas, kriteria selesai (dokumen ini) | ✅ |
 | 2 | Sprint 1 — Keandalan & mandiri offline | OTP lewat antrean (queue), perintah cek kesiapan sistem, aset tanpa CDN | ✅ |
 | 3 | Sprint 2 — Laporan profesional | Ekspor `.xlsx` asli & PDF dari server | ✅ |
-| 4 | Sprint 3 — Keamanan login lanjutan | Cloudflare Turnstile (fallback soal hitung), OTP opsional petugas | ⏳ |
-| 5 | Sprint 4 — Real-time WebSocket | Laravel Reverb + fallback polling | ⬜ |
+| 4 | Sprint 3 — Keamanan login lanjutan | Cloudflare Turnstile (fallback soal hitung), OTP opsional petugas | ✅ |
+| 5 | Sprint 4 — Real-time WebSocket | Laravel Reverb + fallback polling | ⏳ |
 | 6 | Sprint 5 — Notifikasi WhatsApp | Gateway WA (mis. Fonnte) untuk panggilan antrean & OTP cadangan | ⬜ |
 | 7 | Pengujian sistem (UAT) | Uji menyeluruh 7 peran, skenario lapangan, uji beban ringan | ⬜ |
 | 8 | Deploy | VPS + HTTPS, Nginx, Supervisor (queue/reverb), cron, backup DB | ⬜ |
@@ -57,10 +57,12 @@ Status: ✅ selesai · 🔄 berjalan · ⏳ menunggu persetujuan · ⬜ belum di
 
 **Hasil verifikasi:** `.xlsx` berisi 5 sheet dengan kop, header berwarna, filter, baris TOTAL berupa rumus `=SUM()`, dan grafik batang kunjungan harian (`xl/charts/chart1.xml`). PDF A4 dengan kop surat di tiap halaman, ringkasan, grafik, tabel bertotal, tanda tangan Kepala Puskesmas (nama & NIP diatur di Pengaturan), nomor halaman, dan footer hak cipta. Dibuka di browser; 10/10 test (280 assertion) lolos. Ditemukan & diperbaiki: angka 0 sempat hilang di Excel karena perbandingan longgar `fromArray`.
 
-## Fase 4 — Sprint 3: Keamanan login lanjutan (⬜)
+## Fase 4 — Sprint 3: Keamanan login lanjutan (✅)
 - S3.1 Cloudflare Turnstile bila kunci diisi; otomatis kembali ke soal hitung bila offline/kosong.
 - S3.2 OTP perangkat baru untuk petugas (opsional per peran, diatur di Pengaturan).
 - S3.3 Kunci akun sementara setelah N kali gagal + notifikasi ke Super Admin.
+
+**Hasil verifikasi:** Turnstile aktif bila `TURNSTILE_SITE_KEY`/`TURNSTILE_SECRET_KEY` diisi, dipasang di login, daftar, dan lupa password; bila Cloudflare tidak terjangkau sesi beralih ke soal hitung. OTP perangkat baru bisa diwajibkan per peran petugas (Pengaturan); akun petugas ber-email `.test` dikecualikan agar tidak terkunci di luar. Akun terkunci setelah 5x gagal (bisa diatur) selama 15 menit, Super Admin mendapat notifikasi, tercatat di Audit, API mengembalikan 423, dibuka lewat Lupa password atau tombol Buka kunci. 14/14 test (332 assertion) lolos.
 
 ## Fase 5 — Sprint 4: Real-time WebSocket (⬜)
 - S4.1 Laravel Reverb + event `DataBerubah` per kanal (antrean, resep, konsultasi, pengaduan).

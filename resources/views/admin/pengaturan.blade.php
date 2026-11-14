@@ -19,6 +19,15 @@
     </div>
     @include('partials.field', ['name' => 'jam_layanan', 'label' => 'Jam layanan', 'value' => $nilai['jam_layanan']])
     @include('partials.field', ['name' => 'maps_url', 'label' => 'Tautan Google Maps', 'type' => 'url', 'value' => $nilai['maps_url']])
+    <h3 class="mt">Keamanan login</h3>
+    <div class="grid g2">
+      @include('partials.field', ['name' => 'maks_gagal_login', 'label' => 'Kunci akun setelah gagal (kali)', 'type' => 'number', 'value' => $nilai['maks_gagal_login'], 'attrs' => 'min="3" max="20" required'])
+      @include('partials.field', ['name' => 'menit_kunci', 'label' => 'Lama terkunci (menit)', 'type' => 'number', 'value' => $nilai['menit_kunci'], 'attrs' => 'min="1" max="1440" required'])
+    </div>
+    <div class="field"><label>OTP email saat login dari perangkat baru — petugas</label>
+      <div class="hint" style="margin-bottom:6px">Pasien selalu wajib OTP. Centang peran petugas yang juga wajib (akun harus punya email asli).</div>
+      @php $otpPetugas = explode(',', $nilai['otp_petugas']); @endphp
+      <div class="flex">@foreach (['super_admin' => 'Super Admin', 'admin' => 'Admin', 'dokter_umum' => 'Dokter Umum', 'dokter_kandungan' => 'Dokter Kandungan', 'apoteker' => 'Apoteker', 'loket' => 'Loket'] as $k => $l)<label class="check"><input type="checkbox" name="otp_petugas[]" value="{{ $k }}" @checked(in_array($k, $otpPetugas))> {{ $l }}</label>@endforeach</div></div>
     <h3 class="mt">Pencegahan pendaftaran ganda</h3>
     <p class="muted">Username, email, dan NIK selalu ditolak bila sudah terdaftar.</p>
     <label class="check field"><input type="checkbox" name="tolak_nama_ganda" value="1" @checked($nilai['tolak_nama_ganda'] !== '0')> Tolak nama lengkap yang sama</label>
@@ -36,7 +45,7 @@
       <ul class="list-plain">
         <li><span>Tanda tangan QR tiket</span><span class="badge b-ok">HMAC-SHA256</span></li>
         <li><span>API kiosk (X-Signature, anti-replay {{ config('hmac.jendela') }} dtk)</span><span class="badge {{ config('hmac.kiosk') ? 'b-ok' : 'b-bad' }}">{{ config('hmac.kiosk') ? count(config('hmac.kiosk')).' kiosk terdaftar' : 'belum diatur' }}</span></li>
-        <li><span>Verifikasi login</span><span class="badge b-ok">Soal hitung + rate limit</span></li>
+        <li><span>Verifikasi anti-bot</span><span class="badge b-ok">{{ config('services.turnstile.site_key') ? 'Cloudflare Turnstile (cadangan: soal hitung)' : 'Soal hitung (Turnstile belum diatur)' }}</span></li>
         <li><span>OTP email (daftar, lupa password, perangkat baru)</span><span class="badge {{ config('mail.default') === 'smtp' ? 'b-ok' : 'b-warn' }}">{{ config('mail.default') === 'smtp' ? 'SMTP '.config('mail.mailers.smtp.host') : 'Mode log (SMTP belum diatur)' }}</span></li>
       </ul></div>
   </div>

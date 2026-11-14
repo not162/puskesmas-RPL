@@ -35,6 +35,7 @@
         @error('foto_ktp')<div class="err-msg">{{ $message }}</div>@enderror</div>
       <div class="field"><label class="check"><input type="checkbox" name="setuju" value="1" @checked(old('setuju'))> <span>Saya setuju data saya diproses sesuai <a href="{{ route('privasi') }}" target="_blank">Kebijakan Privasi</a> (wajib)</span></label>
         @error('setuju')<div class="err-msg">{{ $message }}</div>@enderror</div>
+      @include('partials.captcha')
       <button class="btn btn-primary btn-block btn-lg" type="submit">Daftar & kirim kode OTP</button>
     </form>
     <p class="muted mt mb0" style="text-align:center">Sudah punya akun? <a href="{{ route('login') }}">Masuk</a> · <a href="{{ route('password.request') }}">Lupa password?</a></p>

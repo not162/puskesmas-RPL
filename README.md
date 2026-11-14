@@ -167,6 +167,12 @@ php artisan test
 
 Mencakup login 7 peran (password berbeda, captcha), lupa password, registrasi pasien + upload KTP, alur 10 langkah beserta notifikasi, QR HMAC asli vs palsu, API kiosk (tanda tangan salah/kedaluwarsa/replay), real-time, navigasi & pembatasan tiap peran, pengaduan, audit, dan CRUD API.
 
+## Keamanan login (Sprint 3)
+
+- **Anti-bot:** Cloudflare Turnstile bila `TURNSTILE_SITE_KEY` & `TURNSTILE_SECRET_KEY` diisi di `.env` (kunci gratis dari dash.cloudflare.com → Turnstile). Kosong atau Cloudflare tidak terjangkau → otomatis soal hitung. Dipakai di login, daftar, dan lupa password.
+- **Kunci akun:** setelah 5 kali gagal (bisa diubah di Pengaturan) akun terkunci 15 menit, Super Admin mendapat notifikasi, tercatat di Audit. Buka kunci lewat Lupa password (OTP) atau tombol **Buka kunci** di Akun Staf.
+- **OTP perangkat baru untuk petugas:** centang peran di Pengaturan → Keamanan login. Hanya berlaku untuk akun yang emailnya asli (bukan `.test`).
+
 ## Cek kesiapan & antrean email
 
 ```bash

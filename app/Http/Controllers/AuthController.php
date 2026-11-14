@@ -12,6 +12,9 @@ use App\Support\CekDuplikat;
 use App\Support\Hmac;
 use App\Support\Notifier;
 use App\Support\Otp;
+use App\Support\Verifikasi;
+use App\Models\Pengaturan;
+use App\Notifications\InfoStaf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cookie;
@@ -27,18 +30,8 @@ class AuthController extends Controller
 {
     private const HARI_PERANGKAT = 30;
 
-    /** Soal hitung sederhana sebagai verifikasi keamanan. */
-    public static function captcha(): string
-    {
-        $a = random_int(2, 9);
-        $b = random_int(1, 9);
-        [$soal, $jawab] = random_int(0, 1) ? ["$a + $b", $a + $b] : ["$a × $b", $a * $b];
-        session(['captcha' => $jawab]);
-        return $soal;
-    }
-
-    public function formLogin() { return view('auth.login', ['soal' => self::captcha()]); }
-    public function formLoginPasien() { return view('auth.login-pasien', ['soal' => self::captcha()]); }
+    public function formLogin() { return view('auth.login'); }
+    public function formLoginPasien() { return view('auth.login-pasien'); }
 
     // ======================= LOGIN =======================
 
@@ -47,12 +40,8 @@ class AuthController extends Controller
         $data = $request->validate([
             'login' => ['required', 'string', 'max:100'],
             'password' => ['required', 'string'],
-            'captcha' => ['required', 'integer'],
-        ], [], ['login' => 'username atau email', 'captcha' => 'verifikasi keamanan']);
-
-        if ((int) session()->pull('captcha', -1) !== (int) $data['captcha']) {
-            throw ValidationException::withMessages(['captcha' => 'Jawaban verifikasi keamanan salah.']);
-        }
+        ], [], ['login' => 'username atau email']);
+        Verifikasi::periksa($request);
 
         $login = Str::lower(trim($data['login']));
         $kolom = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
@@ -62,18 +51,25 @@ class AuthController extends Controller
         }
 
         $akun = Akun::where($kolom, $login)->first();
+        if ($akun?->terkunci()) {
+            LogLogin::create(['id_akun' => $akun->id_akun, 'email_dicoba' => $login, 'waktu' => now(), 'hasil' => 'terkunci', 'ip' => $request->ip()]);
+            throw ValidationException::withMessages(['login' => 'Akun terkunci sementara sampai '.$akun->terkunci_sampai->format('H:i').' karena terlalu banyak percobaan gagal. Gunakan Lupa password untuk membuka kunci.']);
+        }
         $ok = $akun && $akun->aktif() && Hash::check($data['password'], $akun->password);
         LogLogin::create(['id_akun' => $akun?->id_akun, 'email_dicoba' => $login, 'waktu' => now(), 'hasil' => $ok ? 'berhasil' : 'gagal', 'ip' => $request->ip()]);
 
         if (! $ok) {
             RateLimiter::hit($kunci, 60);
+            if ($akun && $akun->aktif()) self::catatGagal($akun);
             $pesan = $akun && ! $akun->aktif() ? 'Akun Anda dinonaktifkan. Hubungi pihak Puskesmas.' : 'Username/email atau password salah.';
+            if ($akun?->fresh()?->terkunci()) $pesan = 'Terlalu banyak percobaan gagal. Akun dikunci '.Pengaturan::nilai('menit_kunci').' menit. Gunakan Lupa password untuk membuka kunci.';
             throw ValidationException::withMessages(['login' => $pesan]);
         }
         RateLimiter::clear($kunci);
+        $akun->forceFill(['gagal_login' => 0, 'terkunci_sampai' => null])->save();
 
-        // Pasien dari perangkat baru wajib OTP email
-        if ($akun->hasRole(Peran::PASIEN) && $akun->email && ! $this->perangkatTepercaya($request, $akun)) {
+        // Perangkat baru wajib OTP email: pasien selalu, petugas bila perannya diaktifkan di Pengaturan
+        if (self::wajibOtpPerangkat($akun) && ! $this->perangkatTepercaya($request, $akun)) {
             $otp = Otp::kirim($akun->email, 'login', ['ingat' => $request->boolean('ingat')], $akun->id_akun);
             session(['otp_login' => $otp->id]);
             return redirect()->route('login.otp')->with('alert', ['tipe' => 'info', 'judul' => 'Perangkat baru terdeteksi', 'pesan' => 'Masukkan kode OTP yang dikirim ke '.$otp->emailSamaran().'.']);
@@ -111,6 +107,28 @@ class AuthController extends Controller
         $otp = Otp::kirimUlang(OtpKode::findOrFail(session('otp_login')));
         session(['otp_login' => $otp->id]);
         return back()->with('alert', ['tipe' => 'success', 'judul' => 'Kode baru dikirim', 'pesan' => 'Periksa email '.$otp->emailSamaran().'.']);
+    }
+
+    public static function wajibOtpPerangkat(Akun $a): bool
+    {
+        if (! $a->email || str_ends_with($a->email, '.test') && ! $a->hasRole(Peran::PASIEN)) return false;
+        $peran = array_filter(explode(',', (string) Pengaturan::nilai('otp_petugas')));
+        return $a->hasRole(Peran::PASIEN) || in_array($a->role(), $peran, true);
+    }
+
+    /** Tambah hitungan gagal; kunci sementara & beri tahu Super Admin bila melewati batas. */
+    public static function catatGagal(Akun $akun): void
+    {
+        $batas = max(3, (int) Pengaturan::nilai('maks_gagal_login'));
+        $akun->increment('gagal_login');
+        if ($akun->gagal_login < $batas) return;
+        $menit = max(1, (int) Pengaturan::nilai('menit_kunci'));
+        $akun->forceFill(['terkunci_sampai' => now()->addMinutes($menit), 'gagal_login' => 0])->save();
+        AuditLog::catat('kunci_akun', $akun, ['menit' => $menit, 'ip' => request()->ip()]);
+        \Illuminate\Support\Facades\Notification::send(
+            Akun::whereHas('peran', fn ($q) => $q->where('nama_peran', Peran::SUPER_ADMIN))->where('status', 'aktif')->get(),
+            new InfoStaf('Akun dikunci sementara', "@{$akun->username} gagal login {$batas}x dari IP ".request()->ip().". Terkunci {$menit} menit.", route('admin.akun.index', ['q' => $akun->username]), 'danger')
+        );
     }
 
     private function namaCookiePerangkat(Akun $a): string { return 'pkm_perangkat_'.$a->id_akun; }
@@ -157,6 +175,8 @@ class AuthController extends Controller
             'email' => Str::lower(trim((string) $request->input('email'))),
             'nama' => trim(preg_replace('/\s+/', ' ', (string) $request->input('nama'))),
         ]);
+
+        Verifikasi::periksa($request);
 
         // 1) Data sudah terdaftar -> langsung arahkan ke login / lupa password
         $ganda = CekDuplikat::cari($request->only('username', 'email', 'nik', 'nama', 'no_kk'));
@@ -281,6 +301,7 @@ class AuthController extends Controller
     public function kirimLupa(Request $request)
     {
         $data = $request->validate(['login' => ['required', 'string', 'max:100']], [], ['login' => 'username atau email']);
+        Verifikasi::periksa($request);
         $login = Str::lower(trim($data['login']));
         $akun = Akun::where(filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username', $login)->first();
 
@@ -321,7 +342,7 @@ class AuthController extends Controller
         $otp = Otp::verifikasi(OtpKode::find(session('otp_reset')), $request->input('kode'));
         session()->forget('otp_reset');
         $akun = Akun::findOrFail($otp->id_akun);
-        $akun->forceFill(['password' => $request->input('password'), 'remember_token' => Str::random(60)])->save();
+        $akun->forceFill(['password' => $request->input('password'), 'remember_token' => Str::random(60), 'gagal_login' => 0, 'terkunci_sampai' => null])->save();
         $akun->tokens()->delete();
         return redirect()->route('login')->with('alert', ['tipe' => 'success', 'judul' => 'Password diperbarui', 'pesan' => 'Silakan masuk dengan password baru.']);
     }

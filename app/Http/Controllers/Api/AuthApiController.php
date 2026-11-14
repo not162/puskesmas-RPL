@@ -27,12 +27,17 @@ class AuthApiController extends Controller
         $data = $request->validate(['login' => 'required|max:100', 'password' => 'required', 'device' => 'nullable|max:60']);
         $login = strtolower(trim($data['login']));
         $akun = Akun::with('peran')->where(filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username', $login)->first();
+        if ($akun?->terkunci()) {
+            return response()->json(['message' => 'Akun terkunci sementara sampai '.$akun->terkunci_sampai->format('H:i').'.'], 423);
+        }
         $ok = $akun && $akun->aktif() && Hash::check($data['password'], $akun->password);
         LogLogin::create(['id_akun' => $akun?->id_akun, 'email_dicoba' => $login, 'waktu' => now(), 'hasil' => $ok ? 'berhasil' : 'gagal', 'ip' => $request->ip()]);
         if (! $ok) {
+            if ($akun && $akun->aktif()) AuthController::catatGagal($akun);
             throw ValidationException::withMessages(['login' => 'Username/email atau password salah, atau akun nonaktif.']);
         }
-        if ($akun->hasRole(Peran::PASIEN) && $akun->email) {
+        $akun->forceFill(['gagal_login' => 0, 'terkunci_sampai' => null])->save();
+        if (AuthController::wajibOtpPerangkat($akun)) {
             $otp = Otp::kirim($akun->email, 'login', ['device' => $data['device'] ?? 'api'], $akun->id_akun);
             return response()->json(['message' => 'Kode OTP dikirim ke email.', 'otp_ref' => $otp->ref, 'email' => $otp->emailSamaran()], 202);
         }

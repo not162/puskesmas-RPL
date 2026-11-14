@@ -10,9 +10,10 @@
   @foreach ($akun as $a)
     <tr><td>{{ $a->namaTampil() }}</td><td><b>{{ '@'.$a->username }}</b><br><small>{{ $a->email ?? '-' }}</small></td><td><span class="badge">{{ $a->peran->label }}</span></td>
       <td><small>{{ $a->dokter ? 'STR '.$a->dokter->no_str : ($a->apoteker ? 'SIPA '.$a->apoteker->no_sipa : ($a->pasien ? $a->pasien->no_rm : '')) }}</small></td>
-      <td>@include('partials.status', ['s' => $a->status])</td>
+      <td>@include('partials.status', ['s' => $a->status])@if($a->terkunci()) <span class="badge b-bad" title="sampai {{ $a->terkunci_sampai->format('H:i') }}">Terkunci</span>@endif</td>
       <td><div class="actions">
         @unless ($a->hasRole('pasien'))<a class="btn btn-sm" href="{{ route('admin.akun.edit', $a) }}"><x-ico n="edit"/></a>@endunless
+        @if ($a->terkunci())<form class="inline" method="POST" action="{{ route('admin.akun.bukaKunci', $a) }}">@csrf<button class="btn btn-sm btn-ok">Buka kunci</button></form>@endif
         <form class="inline" method="POST" action="{{ route('admin.akun.status', $a) }}">@csrf<button class="btn btn-sm">{{ $a->aktif() ? 'Nonaktifkan' : 'Aktifkan' }}</button></form>
         <form class="inline" method="POST" action="{{ route('admin.akun.destroy', $a) }}" data-confirm="Hapus akun {{ $a->email }}? Tindakan ini tidak dapat dibatalkan." data-confirm-title="Hapus akun">@csrf @method('DELETE')<button class="btn btn-sm btn-bad"><x-ico n="trash"/></button></form>
       </div></td></tr>

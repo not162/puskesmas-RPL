@@ -21,6 +21,10 @@ class PengaturanController extends Controller
             'whatsapp' => ['nullable', 'regex:/^62[0-9]{8,13}$/'], 'email' => ['nullable', 'email'], 'jam_layanan' => ['nullable', 'max:120'],
             'maps_url' => ['nullable', 'url'], 'kota' => ['required', 'max:60'], 'kepala_puskesmas' => ['nullable', 'max:100'], 'nip_kepala' => ['nullable', 'regex:/^[0-9 ]{8,24}$/'], 'maks_hari_antrean' => ['required', 'integer', 'between:0,30'],
         ], ['whatsapp.regex' => 'Nomor WhatsApp format 62xxxxxxxxxx.']);
+        $keamanan = $request->validate(['maks_gagal_login' => ['required', 'integer', 'between:3,20'], 'menit_kunci' => ['required', 'integer', 'between:1,1440'], 'otp_petugas' => ['array'], 'otp_petugas.*' => ['in:super_admin,admin,dokter_umum,dokter_kandungan,apoteker,loket']]);
+        $data['maks_gagal_login'] = (string) $keamanan['maks_gagal_login'];
+        $data['menit_kunci'] = (string) $keamanan['menit_kunci'];
+        $data['otp_petugas'] = implode(',', $keamanan['otp_petugas'] ?? []);
         $data['tolak_nama_ganda'] = $request->boolean('tolak_nama_ganda') ? '1' : '0';
         $data['tolak_kk_ganda'] = $request->boolean('tolak_kk_ganda') ? '1' : '0';
         foreach ($data as $k => $v) {

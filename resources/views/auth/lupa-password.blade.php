@@ -10,6 +10,7 @@
     @endif
     <form method="POST" action="{{ route('password.email') }}">@csrf
       @include('partials.field', ['name' => 'login', 'label' => 'Username atau email', 'attrs' => 'required autofocus autocapitalize="none"'])
+      @include('partials.captcha')
       <button class="btn btn-primary btn-block">Kirim kode OTP</button>
     </form>
     <p class="mt mb0" style="text-align:center"><a href="{{ route('login') }}">← Kembali ke halaman masuk</a></p>

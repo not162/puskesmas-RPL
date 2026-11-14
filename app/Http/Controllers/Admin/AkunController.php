@@ -74,6 +74,12 @@ class AkunController extends Controller
         return $this->kembali('success', 'Status akun', "{$akun->email} sekarang {$akun->status}.");
     }
 
+    public function bukaKunci(Akun $akun)
+    {
+        $akun->forceFill(['gagal_login' => 0, 'terkunci_sampai' => null])->save();
+        return $this->kembali('success', 'Kunci dibuka', "@{$akun->username} dapat login kembali.");
+    }
+
     public function destroy(Request $request, Akun $akun)
     {
         if ($akun->is($request->user())) {

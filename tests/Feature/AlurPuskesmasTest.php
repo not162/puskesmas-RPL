@@ -88,10 +88,10 @@ class AlurPuskesmasTest extends TestCase
 
     public function test_lupa_password_dengan_otp_email(): void
     {
-        $this->post('/lupa-password', ['login' => 'tidak.ada'])->assertRedirect('/lupa-password/verifikasi'); // respons sama, tidak bocor
+        $this->withSession(['captcha' => 5])->post('/lupa-password', ['captcha' => 5] + ['login' => 'tidak.ada'])->assertRedirect('/lupa-password/verifikasi'); // respons sama, tidak bocor
         Mail::assertNothingSent();
 
-        $this->post('/lupa-password', ['login' => 'pasien'])->assertRedirect('/lupa-password/verifikasi');
+        $this->withSession(['captcha' => 5])->post('/lupa-password', ['captcha' => 5] + ['login' => 'pasien'])->assertRedirect('/lupa-password/verifikasi');
         Mail::assertSent(KodeOtpMail::class, fn ($m) => $m->hasTo('pasien@puskesmas.test') && $m->tujuan === 'reset');
         $this->post('/lupa-password/verifikasi', ['kode' => '123123', 'password' => 'BaruSekali9', 'password_confirmation' => 'BaruSekali9'])->assertSessionHasErrors('kode');
         $this->post('/lupa-password/verifikasi', ['kode' => $this->kodeOtp(), 'password' => 'BaruSekali9', 'password_confirmation' => 'BaruSekali9'])->assertRedirect('/login');
@@ -101,7 +101,7 @@ class AlurPuskesmasTest extends TestCase
     public function test_otp_mode_antrean_tidak_menahan_halaman(): void
     {
         config(['otp.pengiriman' => 'antrean']);
-        $this->post('/lupa-password', ['login' => 'pasien'])->assertRedirect('/lupa-password/verifikasi');
+        $this->withSession(['captcha' => 5])->post('/lupa-password', ['captcha' => 5] + ['login' => 'pasien'])->assertRedirect('/lupa-password/verifikasi');
         Mail::assertQueued(KodeOtpMail::class, fn ($m) => $m->hasTo('pasien@puskesmas.test') && $m->tries === 3);
         Mail::assertNotSent(KodeOtpMail::class);
     }
@@ -141,6 +141,88 @@ class AlurPuskesmasTest extends TestCase
         $this->get('/api/v1/laporan/bulanan/pdf', ['Authorization' => "Bearer $token"])->assertOk()->assertHeader('Content-Type', 'application/pdf');
     }
 
+    public function test_kunci_akun_setelah_gagal_berulang(): void
+    {
+        $login = fn (string $pw) => $this->withSession(['captcha' => 4])->post('/login', ['login' => 'apoteker', 'password' => $pw, 'captcha' => 4]);
+        for ($i = 0; $i < 4; $i++) {
+            $login('salah-'.$i)->assertSessionHasErrors('login');
+            \Illuminate\Support\Facades\RateLimiter::clear('apoteker|127.0.0.1');
+        }
+        $this->assertFalse($this->akun('apoteker')->terkunci());
+        $login('salah-5')->assertSessionHasErrors('login');
+        $apt = $this->akun('apoteker');
+        $this->assertTrue($apt->terkunci());
+        // Password benar pun ditolak selama terkunci
+        \Illuminate\Support\Facades\RateLimiter::clear('apoteker|127.0.0.1');
+        $login($this->sandi('apoteker'))->assertSessionHasErrors('login');
+        $this->assertGuest();
+        // Super Admin diberi tahu & tercatat di audit
+        $this->assertTrue($this->akun('superadmin')->notifications()->where('data->judul', 'Akun dikunci sementara')->exists());
+        $this->assertTrue(AuditLog::where('aksi', 'kunci_akun')->exists());
+        // API juga menolak (423)
+        $this->postJson('/api/v1/auth/login', ['login' => 'apoteker', 'password' => $this->sandi('apoteker')])->assertStatus(423);
+        // Super Admin membuka kunci
+        $this->actingAs($this->akun('superadmin'))->post("/admin/akun/{$apt->id_akun}/buka-kunci")->assertRedirect();
+        $this->assertFalse($apt->fresh()->terkunci());
+        $this->post('/logout');
+        $login($this->sandi('apoteker'))->assertRedirect('/dashboard');
+    }
+
+    public function test_lupa_password_membuka_kunci_akun(): void
+    {
+        $p = $this->akun('pasien');
+        $p->forceFill(['terkunci_sampai' => now()->addMinutes(15)])->save();
+        $this->withSession(['captcha' => 5])->post('/lupa-password', ['captcha' => 5, 'login' => 'pasien']);
+        $this->post('/lupa-password/verifikasi', ['kode' => $this->kodeOtp(), 'password' => 'BaruLagi12', 'password_confirmation' => 'BaruLagi12'])->assertRedirect('/login');
+        $this->assertFalse($p->fresh()->terkunci());
+    }
+
+    public function test_turnstile_dan_cadangan_soal_hitung(): void
+    {
+        config(['services.turnstile.site_key' => '1x00000000000000000000AA', 'services.turnstile.secret_key' => 'rahasia-uji']);
+        $this->get('/login')->assertSee('cf-turnstile', false)->assertDontSee('captcha-q', false);
+
+        // Satu fake dengan saklar: online (token-ok lolos) atau offline
+        $offline = false;
+        \Illuminate\Support\Facades\Http::fake(function ($req) use (&$offline) {
+            if ($offline) throw new \Illuminate\Http\Client\ConnectionException('offline');
+            return \Illuminate\Support\Facades\Http::response(['success' => $req['response'] === 'token-ok']);
+        });
+        $this->post('/login', ['login' => 'loket', 'password' => $this->sandi('loket'), 'cf-turnstile-response' => 'token-ok'])->assertRedirect('/dashboard');
+        \Illuminate\Support\Facades\Http::assertSent(fn ($r) => $r['secret'] === 'rahasia-uji' && $r['response'] === 'token-ok');
+        $this->post('/logout');
+
+        // Token ditolak / kosong
+        $this->post('/login', ['login' => 'loket', 'password' => $this->sandi('loket'), 'cf-turnstile-response' => 'palsu'])->assertSessionHasErrors('captcha');
+        $this->post('/login', ['login' => 'loket', 'password' => $this->sandi('loket')])->assertSessionHasErrors('captcha');
+        $this->assertGuest();
+
+        // Cloudflare tidak terjangkau (offline) -> beralih ke soal hitung
+        $offline = true;
+        $this->post('/login', ['login' => 'loket', 'password' => $this->sandi('loket'), 'cf-turnstile-response' => 'x'])->assertSessionHasErrors('captcha');
+        $this->get('/login')->assertSee('captcha-q', false)->assertDontSee('cf-turnstile', false);
+        $this->withSession(['captcha' => 6, 'verifikasi_mode' => 'hitung'])->post('/login', ['login' => 'loket', 'password' => $this->sandi('loket'), 'captcha' => 6])->assertRedirect('/dashboard');
+    }
+
+    public function test_otp_perangkat_baru_untuk_petugas_bila_diaktifkan(): void
+    {
+        $loket = $this->akun('loket');
+        $loket->update(['email' => 'loket.puskesmas@gmail.com']);
+        $masuk = fn () => $this->withSession(['captcha' => 2])->post('/login', ['login' => 'loket', 'password' => $this->sandi('loket'), 'captcha' => 2]);
+
+        $masuk()->assertRedirect('/dashboard'); // belum diaktifkan: langsung masuk
+        $this->post('/logout');
+
+        \App\Models\Pengaturan::updateOrCreate(['kunci' => 'otp_petugas'], ['nilai' => 'loket,apoteker']);
+        $masuk()->assertRedirect('/login/verifikasi');
+        $this->assertGuest();
+        $this->post('/login/verifikasi', ['kode' => $this->kodeOtp('loket.puskesmas@gmail.com')])->assertRedirect('/dashboard');
+
+        // Petugas dengan email contoh (.test) tidak dipaksa OTP agar tidak terkunci di luar
+        $this->post('/logout');
+        $this->withSession(['captcha' => 2])->post('/login', ['login' => 'apoteker', 'password' => $this->sandi('apoteker'), 'captcha' => 2])->assertRedirect('/dashboard');
+    }
+
     public function test_data_ganda_diarahkan_ke_login_atau_lupa_password(): void
     {
         $dasar = ['nik' => '3171010101990077', 'no_kk' => '3171010101990000', 'nama' => 'Pasien Baru', 'tgl_lahir' => '1990-02-02', 'jenis_kelamin' => 'L',
@@ -148,14 +230,14 @@ class AlurPuskesmasTest extends TestCase
             'password' => 'rahasia123', 'password_confirmation' => 'rahasia123', 'setuju' => '1'];
         foreach ([['username' => 'pasien'], ['email' => 'pasien@puskesmas.test'], ['nik' => '3171010101900001'], ['nama' => '  budi   SANTOSO '], ['no_kk' => '3171010101900099']] as $i => $ubah) {
             if ($i === 4) \App\Models\Pasien::where('nik', '3171010101900001')->update(['no_kk' => '3171010101900099']);
-            $this->post('/register', array_merge($dasar, $ubah))->assertRedirect('/login')->assertSessionHas('duplikat');
+            $this->withSession(['captcha' => 5])->post('/register', ['captcha' => 5] + array_merge($dasar, $ubah))->assertRedirect('/login')->assertSessionHas('duplikat');
         }
         Mail::assertNothingSent();
         $this->getJson('/register/cek?kolom=username&nilai=pasien')->assertJson(['terdaftar' => true]);
         $this->getJson('/register/cek?kolom=username&nilai=belum.ada')->assertJson(['terdaftar' => false]);
 
         // Data baru lolos -> OTP dikirim ke email pengguna, akun baru dibuat setelah kode benar
-        $this->post('/register', $dasar)->assertRedirect('/register/verifikasi');
+        $this->withSession(['captcha' => 5])->post('/register', ['captcha' => 5] + $dasar)->assertRedirect('/register/verifikasi');
         $this->assertNull(Akun::where('username', 'pasien.baru')->first());
         $this->post('/register/verifikasi', ['kode' => $this->kodeOtp('pasien.baru@gmail.com')])->assertRedirect('/dashboard');
         $this->assertSame('3171010101990000', Akun::where('username', 'pasien.baru')->first()->pasien->no_kk);
@@ -167,7 +249,7 @@ class AlurPuskesmasTest extends TestCase
         $versiAwal = RealtimeController::versi();
 
         // 1. Registrasi (hanya pasien) — form sesuai layout
-        $this->post('/register', [
+        $this->withSession(['captcha' => 5])->post('/register', ['captcha' => 5] + [
             'nik' => '3171010101990002', 'nama' => 'Siti Aminah', 'tgl_lahir' => '1995-05-05', 'jenis_kelamin' => 'P',
             'alamat' => 'Jl. Mawar 1', 'username' => 'siti.aminah', 'no_tlp' => '081298765432', 'email' => 'siti.aminah@gmail.com', 'no_kk' => '3171010101990111',
             'no_bpjs' => '0009876543210', 'password' => 'rahasia123', 'password_confirmation' => 'rahasia123',
@@ -180,7 +262,7 @@ class AlurPuskesmasTest extends TestCase
         Storage::disk('local')->assertExists($siti->pasien->foto_ktp);
         // Username duplikat ditolak
         $this->post('/logout');
-        $this->post('/register', ['username' => 'siti.aminah', 'nik' => '3171010101990003'])->assertRedirect('/login')->assertSessionHas('duplikat', 'Username');
+        $this->withSession(['captcha' => 5])->post('/register', ['captcha' => 5] + ['username' => 'siti.aminah', 'nik' => '3171010101990003'])->assertRedirect('/login')->assertSessionHas('duplikat', 'Username');
 
         // Loket mendapat notifikasi pasien baru (real-time lintas peran)
         $this->assertTrue($this->akun('loket')->notifications()->where('data->judul', 'like', 'Pasien baru%')->exists());
