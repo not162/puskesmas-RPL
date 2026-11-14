@@ -28,6 +28,12 @@
       <div class="hint" style="margin-bottom:6px">Pasien selalu wajib OTP. Centang peran petugas yang juga wajib (akun harus punya email asli).</div>
       @php $otpPetugas = explode(',', $nilai['otp_petugas']); @endphp
       <div class="flex">@foreach (['super_admin' => 'Super Admin', 'admin' => 'Admin', 'dokter_umum' => 'Dokter Umum', 'dokter_kandungan' => 'Dokter Kandungan', 'apoteker' => 'Apoteker', 'loket' => 'Loket'] as $k => $l)<label class="check"><input type="checkbox" name="otp_petugas[]" value="{{ $k }}" @checked(in_array($k, $otpPetugas))> {{ $l }}</label>@endforeach</div></div>
+    <h3 class="mt">Notifikasi WhatsApp</h3>
+    <p class="muted">Hanya untuk pasien yang menyetujui. Driver: <b>{{ config('whatsapp.driver') }}</b>{{ config('whatsapp.driver') === 'log' ? ' (belum terkirim, isi FONNTE_TOKEN & WA_DRIVER=fonnte di .env)' : '' }}. <a href="{{ route('admin.wa') }}">Lihat log →</a></p>
+    @php $waL = explode(',', $nilai['wa_langkah']); @endphp
+    <div class="field"><label>Langkah yang dikirim ke WhatsApp</label><div class="flex">
+      @foreach (config('alur.langkah') as $no => $l)<label class="check"><input type="checkbox" name="wa_langkah[]" value="{{ $no }}" @checked(in_array((string) $no, $waL))> {{ $no }}. {{ $l['judul'] }}</label>@endforeach</div></div>
+    @include('partials.field', ['name' => 'wa_maks_harian', 'label' => 'Maks. pesan per nomor per hari', 'type' => 'number', 'value' => $nilai['wa_maks_harian'], 'attrs' => 'min="1" max="50" required'])
     <h3 class="mt">Pencegahan pendaftaran ganda</h3>
     <p class="muted">Username, email, dan NIK selalu ditolak bila sudah terdaftar.</p>
     <label class="check field"><input type="checkbox" name="tolak_nama_ganda" value="1" @checked($nilai['tolak_nama_ganda'] !== '0')> Tolak nama lengkap yang sama</label>

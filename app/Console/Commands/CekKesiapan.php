@@ -108,6 +108,11 @@ class CekKesiapan extends Command
             $this->hasil('ok', 'Real-time', 'mode polling (BROADCAST_CONNECTION='.config('broadcasting.default').')');
         }
 
+        // --- WhatsApp ---
+        $drv = config('whatsapp.driver');
+        if ($drv === 'fonnte') config('whatsapp.fonnte_token') ? $this->hasil('ok', 'WhatsApp', 'Fonnte · token terisi · '.Pengaturan::nilai('wa_maks_harian').' pesan/nomor/hari') : $this->hasil('gagal', 'WhatsApp', 'WA_DRIVER=fonnte tetapi FONNTE_TOKEN kosong');
+        else $this->hasil('warn', 'WhatsApp', 'WA_DRIVER=log — pesan hanya dicatat (menu Log WhatsApp), belum terkirim');
+
         // --- Penyimpanan ---
         $ok = is_writable(storage_path('logs')) && Storage::disk('local')->put('.cek', '1');
         Storage::disk('local')->delete('.cek');

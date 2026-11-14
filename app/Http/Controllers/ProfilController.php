@@ -29,7 +29,7 @@ class ProfilController extends Controller
             $akun->password = $data['password'];
         }
         $akun->save();
-        $akun->pasien?->update(array_filter(['no_tlp' => $data['no_tlp'] ?? null, 'alamat' => $data['alamat'] ?? null]));
+        $akun->pasien?->update(array_filter(['no_tlp' => $data['no_tlp'] ?? null, 'alamat' => $data['alamat'] ?? null]) + ['wa_opt_in' => $request->boolean('wa_opt_in')]);
 
         return $this->kembali('success', 'Profil diperbarui', 'Perubahan profil berhasil disimpan.');
     }

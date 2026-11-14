@@ -175,6 +175,13 @@ Mencakup login 7 peran (password berbeda, captcha), lupa password, registrasi pa
 - **Kunci akun:** setelah 5 kali gagal (bisa diubah di Pengaturan) akun terkunci 15 menit, Super Admin mendapat notifikasi, tercatat di Audit. Buka kunci lewat Lupa password (OTP) atau tombol **Buka kunci** di Akun Staf.
 - **OTP perangkat baru untuk petugas:** centang peran di Pengaturan → Keamanan login. Hanya berlaku untuk akun yang emailnya asli (bukan `.test`).
 
+## Notifikasi WhatsApp (Sprint 5)
+
+- Hanya untuk pasien yang **menyetujui** (centang saat daftar, di Profil, atau ditanyakan petugas loket).
+- Langkah yang dikirim dipilih di **Pengaturan → Notifikasi WhatsApp** (bawaan: nomor antrean, dipanggil, resep diproses); batas pesan per nomor per hari.
+- Bila email OTP gagal terkirim, kode dikirim lewat WhatsApp ke pasien yang menyetujui.
+- Agar terkirim sungguhan, daftar di fonnte.com, hubungkan nomor WA Puskesmas, lalu isi `.env`: `WA_DRIVER=fonnte` dan `FONNTE_TOKEN=...`. Selama `WA_DRIVER=log`, pesan hanya dicatat di menu **Log WhatsApp** dan `storage/logs/laravel.log`.
+
 ## Cek kesiapan & antrean email
 
 ```bash

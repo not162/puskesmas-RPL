@@ -35,7 +35,7 @@
     ],
   };
   $lain = [['layar', 'Layar Antrean Publik', 'monitor'], ['alur', 'Alur Layanan', 'help']];
-  if ($r === 'super_admin') { array_unshift($lain, ['admin.pasien.index', 'Data Pasien', 'users'], ['pengaduan.index', 'Pengaduan', 'chat'], ['admin.log', 'Log Login', 'lock']); $lain[] = ['swagger', 'API Docs (Swagger)', 'code']; }
+  if ($r === 'super_admin') { array_unshift($lain, ['admin.pasien.index', 'Data Pasien', 'users'], ['pengaduan.index', 'Pengaduan', 'chat'], ['admin.log', 'Log Login', 'lock'], ['admin.wa', 'Log WhatsApp', 'chat']); $lain[] = ['swagger', 'API Docs (Swagger)', 'code']; }
   if ($r !== 'pasien') $lain[] = ['profil', 'Profil & Keamanan', 'user'];
   $url = fn ($it) => route($it[0], $it[3] ?? []);
   $aktif = function ($it) {

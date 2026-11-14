@@ -264,6 +264,82 @@ class AlurPuskesmasTest extends TestCase
         $this->assertLessThan(5, microtime(true) - $mulai);
         $this->assertSame(1, Antrian::count());
     }
+    public function test_whatsapp_hanya_untuk_pasien_opt_in_dan_dibatasi(): void
+    {
+        $p = $this->akun('pasien')->pasien;
+        $ambil = fn () => $this->actingAs($this->akun('pasien'))->post('/pasien/antrean', ['id_spesialisasi' => 1, 'tanggal' => today()->toDateString()]);
+
+        // Belum opt-in: tidak ada pesan WA
+        $ambil();
+        $this->assertSame(0, \App\Models\WaLog::count());
+
+        // Opt-in: langkah 5 (nomor antrean) dikirim, nomor dinormalisasi ke 62...
+        $p->update(['wa_opt_in' => true]);
+        \App\Models\Antrian::query()->update(['status' => 'batal']);
+        $ambil();
+        $log = \App\Models\WaLog::first();
+        $this->assertSame('6281234567890', $log->nomor);
+        $this->assertSame('langkah_5', $log->jenis);
+        $this->assertSame('log', $log->status);
+
+        // Langkah 7 (dipanggil) juga terkirim, langkah 6 (check-in) tidak (tidak dicentang)
+        $a = \App\Models\Antrian::where('status', 'menunggu')->first();
+        $this->actingAs($this->akun('loket'))->post("/loket/antrean/{$a->kode}/checkin");
+        $this->actingAs($this->akun('loket'))->post("/loket/antrean/{$a->kode}/panggil");
+        $this->assertEqualsCanonicalizing(['langkah_5', 'langkah_7'], \App\Models\WaLog::pluck('jenis')->all());
+
+        // Batas harian
+        \App\Models\Pengaturan::updateOrCreate(['kunci' => 'wa_maks_harian'], ['nilai' => '2']);
+        \Illuminate\Support\Facades\Cache::forget('pengaturan:db');
+        $this->assertSame('dibatasi', \App\Support\WhatsApp::kirim('081234567890', 'tes', 'uji'));
+    }
+
+    public function test_whatsapp_driver_fonnte(): void
+    {
+        config(['whatsapp.driver' => 'fonnte', 'whatsapp.fonnte_token' => 'token-uji']);
+        $ok = true;
+        \Illuminate\Support\Facades\Http::fake(function ($req) use (&$ok) {
+            return \Illuminate\Support\Facades\Http::response(['status' => $ok], 200);
+        });
+        $this->assertSame('terkirim', \App\Support\WhatsApp::kirim('+62 812-3456-7891', 'Halo', 'uji'));
+        \Illuminate\Support\Facades\Http::assertSent(fn ($r) => $r->url() === 'https://api.fonnte.com/send' && $r->hasHeader('Authorization', 'token-uji') && $r['target'] === '6281234567891');
+        $ok = false;
+        $this->assertSame('gagal', \App\Support\WhatsApp::kirim('081234567891', 'Halo', 'uji'));
+        $this->assertSame('tidak_valid', \App\Support\WhatsApp::kirim('12345', 'Halo', 'uji'));
+        // Halaman log & kirim uji (Super Admin)
+        $ok = true;
+        $this->actingAs($this->akun('superadmin'))->get('/admin/whatsapp')->assertOk()->assertSee('6281');
+        $this->actingAs($this->akun('superadmin'))->post('/admin/whatsapp/uji', ['nomor' => '081234567892'])->assertSessionHas('alert.tipe', 'success');
+        $this->actingAs($this->akun('admin'))->get('/admin/whatsapp')->assertRedirect('/dashboard');
+    }
+
+    public function test_otp_cadangan_lewat_whatsapp_saat_email_gagal(): void
+    {
+        \Illuminate\Support\Facades\Mail::shouldReceive('to')->andThrow(new \RuntimeException('SMTP mati'));
+        \Illuminate\Support\Facades\Log::spy();
+        $data = ['captcha' => 5, 'nik' => '3171010101990801', 'no_kk' => '3171010101990802', 'nama' => 'Wati', 'tgl_lahir' => '1991-01-01', 'jenis_kelamin' => 'P',
+            'alamat' => 'Jl. C', 'username' => 'wati.wa', 'no_tlp' => '081299990000', 'email' => 'wati@gmail.com',
+            'password' => 'rahasia123', 'password_confirmation' => 'rahasia123', 'setuju' => '1'];
+
+        // Tanpa opt-in: gagal dengan pesan jelas
+        $this->withSession(['captcha' => 5])->post('/register', $data)->assertSessionHasErrors('email');
+        $this->assertSame(0, \App\Models\OtpKode::count());
+
+        // Dengan opt-in: kode dikirim lewat WhatsApp
+        $this->withSession(['captcha' => 5])->post('/register', $data + ['wa_opt_in' => '1'])->assertRedirect('/register/verifikasi');
+        $this->assertSame('whatsapp', \App\Models\OtpKode::first()->saluran);
+        $this->assertSame('Kode OTP ••••••', \App\Models\WaLog::first()->ringkas); // kode tidak tersimpan di log
+        $kode = null;
+        \Illuminate\Support\Facades\Log::shouldHaveReceived('info')->withArgs(function ($m) use (&$kode) {
+            if (preg_match('/Kode OTP Anda: \*(\d{6})\*/', $m, $x)) $kode = $x[1];
+            return true;
+        });
+        $this->assertNotNull($kode);
+        $this->get('/register/verifikasi')->assertSee('WhatsApp 6281');
+        $this->post('/register/verifikasi', ['kode' => $kode])->assertRedirect('/dashboard');
+        $this->assertTrue(Akun::where('username', 'wati.wa')->first()->pasien->wa_opt_in);
+    }
+
     public function test_data_ganda_diarahkan_ke_login_atau_lupa_password(): void
     {
         $dasar = ['nik' => '3171010101990077', 'no_kk' => '3171010101990000', 'nama' => 'Pasien Baru', 'tgl_lahir' => '1990-02-02', 'jenis_kelamin' => 'L',

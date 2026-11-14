@@ -42,5 +42,6 @@
         <env name="KIOSK_ID" value="kiosk-uji" force="true"/>
         <env name="KIOSK_HMAC_SECRET" value="rahasia-kiosk-uji" force="true"/>
         <env name="OTP_PENGIRIMAN" value="langsung" force="true"/>
+        <env name="WA_DRIVER" value="log" force="true"/>
     </php>
 </phpunit>

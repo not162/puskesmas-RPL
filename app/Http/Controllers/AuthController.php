@@ -211,6 +211,7 @@ class AuthController extends Controller
 
         // 2) Simpan sementara, kirim OTP ke email pengguna
         $payload = collect($data)->except(['password', 'password_confirmation', 'setuju', 'foto_ktp'])->all();
+        $payload['wa_opt_in'] = $request->boolean('wa_opt_in');
         $payload['password'] = Hash::make($data['password']);
         if ($request->hasFile('foto_ktp')) {
             $payload['foto_ktp'] = $request->file('foto_ktp')->store('ktp/sementara', 'local');
@@ -218,7 +219,7 @@ class AuthController extends Controller
         $otp = Otp::kirim($data['email'], 'registrasi', $payload);
         session(['otp_registrasi' => $otp->id]);
 
-        return redirect()->route('register.otp')->with('alert', ['tipe' => 'info', 'judul' => 'Kode OTP terkirim', 'pesan' => 'Cek email '.$otp->emailSamaran().' lalu masukkan kode 6 digit.']);
+        return redirect()->route('register.otp')->with('alert', ['tipe' => 'info', 'judul' => 'Kode OTP terkirim', 'pesan' => ($otp->saluran === 'whatsapp' ? 'Email gagal, kode dikirim lewat ' : 'Cek email ').$otp->emailSamaran().' lalu masukkan kode 6 digit.']);
     }
 
     public function formOtpRegister()
@@ -268,6 +269,7 @@ class AuthController extends Controller
                 'username' => $p['username'], 'email' => $p['email'], 'password' => $p['password'], 'status' => 'aktif',
             ]);
             $profil = collect($p)->only(['nik', 'no_kk', 'nama', 'tgl_lahir', 'jenis_kelamin', 'no_tlp', 'alamat', 'no_bpjs'])->all();
+            $profil['wa_opt_in'] = (bool) ($p['wa_opt_in'] ?? false);
             if (! empty($p['foto_ktp']) && Storage::disk('local')->exists($p['foto_ktp'])) {
                 $tujuan = 'ktp/'.basename($p['foto_ktp']);
                 Storage::disk('local')->move($p['foto_ktp'], $tujuan);

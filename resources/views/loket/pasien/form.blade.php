@@ -13,6 +13,7 @@
     @include('partials.field', ['name' => 'no_bpjs', 'label' => 'No. BPJS (opsional)', 'value' => $pasien->no_bpjs, 'attrs' => 'maxlength="13" inputmode="numeric"'])
   </div>
   @include('partials.field', ['name' => 'alamat', 'label' => 'Alamat', 'type' => 'textarea', 'value' => $pasien->alamat, 'attrs' => 'rows="2"'])
+  <label class="check field"><input type="checkbox" name="wa_opt_in" value="1" @checked(old('wa_opt_in', $pasien->wa_opt_in))> Pasien setuju menerima notifikasi WhatsApp (tanyakan langsung)</label>
   @unless ($pasien->exists)
     <div class="grid g2">
       <div class="field"><label>Langsung ambil antrean hari ini</label><select name="id_spesialisasi" class="input"><option value="">Tidak</option>@foreach ($spesialisasi as $s)<option value="{{ $s->id_spesialisasi }}">{{ $s->poli }}</option>@endforeach</select><div class="hint">Antrean loket otomatis berstatus "hadir".</div></div>

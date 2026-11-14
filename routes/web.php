@@ -164,6 +164,8 @@ Route::middleware(['auth', 'aktif'])->group(function () {
         Route::put('template-notifikasi/{template}', [Admin\TemplateController::class, 'update'])->middleware('izin:template.kelola')->name('template.update');
         Route::post('broadcast', [Admin\TemplateController::class, 'broadcast'])->middleware('izin:notifikasi.broadcast')->name('broadcast');
         Route::get('audit', Admin\AuditController::class)->middleware('izin:audit.lihat')->name('audit');
+        Route::get('whatsapp', [Admin\WaLogController::class, 'index'])->middleware('izin:audit.lihat')->name('wa');
+        Route::post('whatsapp/uji', [Admin\WaLogController::class, 'uji'])->middleware(['izin:pengaturan.kelola', 'throttle:10,1,wa-uji'])->name('wa.uji');
         Route::get('log-login', Admin\LogLoginController::class)->middleware('izin:audit.lihat')->name('log');
         Route::get('pengaturan', [Admin\PengaturanController::class, 'index'])->middleware('izin:pengaturan.kelola')->name('pengaturan');
         Route::put('pengaturan', [Admin\PengaturanController::class, 'update'])->middleware('izin:pengaturan.kelola');

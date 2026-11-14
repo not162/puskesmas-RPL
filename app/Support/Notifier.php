@@ -14,7 +14,12 @@ class Notifier
     public static function pasien(?Pasien $pasien, int $langkah, array $param = [], ?string $url = null, string $tipe = 'info', ?string $pesan = null): void
     {
         if (\App\Models\TemplateNotifikasi::where('langkah', $langkah)->where('aktif', false)->exists()) return; // notifikasi langkah dimatikan
-        $pasien?->akun?->notify(new LangkahLayanan($langkah, $param, $url, $tipe, $pesan));
+        $notif = new LangkahLayanan($langkah, $param, $url, $tipe, $pesan);
+        $pasien?->akun?->notify($notif);
+        if ($pasien) {
+            $isi = $notif->toArray($pasien);
+            WhatsApp::langkahPasien($pasien, $langkah, $isi['judul'], $isi['pesan']);
+        }
     }
 
     /** Kirim ke semua akun aktif dengan peran tertentu. */

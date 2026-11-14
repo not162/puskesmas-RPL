@@ -46,12 +46,27 @@ class Otp
                 ? Mail::to($email)->queue($mail)   // halaman tidak menunggu SMTP
                 : Mail::to($email)->send($mail);
         } catch (\Throwable $e) {
-            $otp->delete();
             report($e);
+            // Cadangan: kirim lewat WhatsApp bila pasien menyetujui (opt-in) & nomor valid
+            $wa = self::nomorCadangan($payload, $idAkun);
+            if ($wa && in_array(WhatsApp::kirim($wa, "Kode OTP Anda: *{$kode}*\nBerlaku ".self::BERLAKU_MENIT." menit. Jangan berikan kepada siapa pun.", 'otp_'.$tujuan, $idAkun, 'Kode OTP ••••••'), ['terkirim', 'log', 'antre'], true)) {
+                $otp->update(['saluran' => 'whatsapp', 'email' => $email]);
+                $otp->nomorWa = $wa;
+                AuditLog::catat('otp_kirim', 'otp_kode', ['tujuan' => $tujuan, 'saluran' => 'whatsapp']);
+                return $otp;
+            }
+            $otp->delete();
             throw ValidationException::withMessages(['kode' => 'Email OTP gagal dikirim. Periksa alamat email atau konfigurasi SMTP server.', 'email' => 'Email OTP gagal dikirim. Periksa alamat email Anda.']);
         }
         AuditLog::catat('otp_kirim', 'otp_kode', ['tujuan' => $tujuan, 'email' => $otp->emailSamaran()]);
         return $otp;
+    }
+
+    private static function nomorCadangan(array $payload, ?int $idAkun): ?string
+    {
+        if (! empty($payload['wa_opt_in']) && ! empty($payload['no_tlp'])) return $payload['no_tlp'];
+        $p = $idAkun ? \App\Models\Pasien::where('id_akun', $idAkun)->first() : null;
+        return $p?->wa_opt_in ? $p->no_tlp : null;
     }
 
     /** Kirim ulang kode baru dengan payload & tujuan yang sama. */

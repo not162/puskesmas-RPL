@@ -25,6 +25,9 @@ class PengaturanController extends Controller
         $data['maks_gagal_login'] = (string) $keamanan['maks_gagal_login'];
         $data['menit_kunci'] = (string) $keamanan['menit_kunci'];
         $data['otp_petugas'] = implode(',', $keamanan['otp_petugas'] ?? []);
+        $wa = $request->validate(['wa_maks_harian' => ['required', 'integer', 'between:1,50'], 'wa_langkah' => ['array'], 'wa_langkah.*' => ['integer', 'between:1,10']]);
+        $data['wa_maks_harian'] = (string) $wa['wa_maks_harian'];
+        $data['wa_langkah'] = implode(',', $wa['wa_langkah'] ?? []);
         $data['tolak_nama_ganda'] = $request->boolean('tolak_nama_ganda') ? '1' : '0';
         $data['tolak_kk_ganda'] = $request->boolean('tolak_kk_ganda') ? '1' : '0';
         foreach ($data as $k => $v) {

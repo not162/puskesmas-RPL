@@ -10,8 +10,8 @@ Status: ✅ selesai · 🔄 berjalan · ⏳ menunggu persetujuan · ⬜ belum di
 | 3 | Sprint 2 — Laporan profesional | Ekspor `.xlsx` asli & PDF dari server | ✅ |
 | 4 | Sprint 3 — Keamanan login lanjutan | Cloudflare Turnstile (fallback soal hitung), OTP opsional petugas | ✅ |
 | 5 | Sprint 4 — Real-time WebSocket | Laravel Reverb + fallback polling | ✅ |
-| 6 | Sprint 5 — Notifikasi WhatsApp | Gateway WA (mis. Fonnte) untuk panggilan antrean & OTP cadangan | ⏳ |
-| 7 | Pengujian sistem (UAT) | Uji menyeluruh 7 peran, skenario lapangan, uji beban ringan | ⬜ |
+| 6 | Sprint 5 — Notifikasi WhatsApp | Gateway WA (mis. Fonnte) untuk panggilan antrean & OTP cadangan | ✅ |
+| 7 | Pengujian sistem (UAT) | Uji menyeluruh 7 peran, skenario lapangan, uji beban ringan | ⏳ |
 | 8 | Deploy | VPS + HTTPS, Nginx, Supervisor (queue/reverb), cron, backup DB | ⬜ |
 | 9 | Pemeliharaan | Monitoring log, rotasi kunci, pembaruan dependensi | ⬜ |
 
@@ -71,10 +71,12 @@ Status: ✅ selesai · 🔄 berjalan · ⏳ menunggu persetujuan · ⬜ belum di
 
 **Hasil verifikasi:** Reverb di port 6001 (8080 dipakai nginx Laragon). Sinyal hanya berisi nama kanal, tanpa data pribadi; kanal `publik`, privat `staf` (petugas), dan privat `akun.{id}` (pemilik data & notifikasi), otorisasi diuji. Di browser: perubahan dari luar tiba di layar antrean & tabel loket sebelum proses pembuatnya selesai (praktis instan, sebelumnya 4–5 dtk). Reverb dimatikan → indikator beralih ke polling dan data tetap muncul. Pemutus sirkuit 30 dtk mencegah request melambat saat Reverb mati (Windows butuh ~1–2 dtk untuk menolak port tertutup). 16/16 test (346 assertion) lolos.
 
-## Fase 6 — Sprint 5: Notifikasi WhatsApp (⬜)
+## Fase 6 — Sprint 5: Notifikasi WhatsApp (✅)
 - S5.1 Driver WA (Fonnte/WA Business API) + mode log untuk lokal.
 - S5.2 Pesan saat nomor dipanggil, resep siap, dan OTP cadangan bila email gagal.
 - S5.3 Persetujuan pasien (opt-in) & batas kirim.
+
+**Hasil verifikasi:** Driver `log` (lokal) dan `fonnte` (diuji dengan respons palsu: header token, nomor dinormalisasi ke 62…, status gagal tercatat). Hanya pasien opt-in (daftar, profil, atau loket); langkah yang dikirim dipilih di Pengaturan (bawaan 5, 7, 9); batas pesan per nomor per hari; OTP dikirim lewat WA bila email gagal dan pasien opt-in, kode tidak disimpan di log. Menu Log WhatsApp + kirim uji untuk Super Admin. Ditemukan & diperbaiki: cache pengaturan menyimpan hasil gabungan sehingga kunci baru menyebabkan error 500 sampai cache kedaluwarsa. 19/19 test (374 assertion) lolos.
 
 ## Fase 7 — Pengujian sistem / UAT (⬜)
 - Skenario per peran (7 peran), alur 10 langkah, data ganda, OTP, QR, kiosk HMAC.

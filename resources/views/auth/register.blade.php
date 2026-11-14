@@ -33,6 +33,7 @@
         <input id="foto_ktp" type="file" name="foto_ktp" accept=".jpg,.jpeg,.png,.pdf" class="input @error('foto_ktp') err @enderror">
         <div class="hint">JPG/PNG/PDF, maks 5 MB. Disimpan privat, tidak tampil di halaman publik.</div>
         @error('foto_ktp')<div class="err-msg">{{ $message }}</div>@enderror</div>
+      <div class="field"><label class="check"><input type="checkbox" name="wa_opt_in" value="1" @checked(old('wa_opt_in'))> <span>Saya bersedia menerima pemberitahuan antrean, panggilan, resep, dan kode OTP cadangan lewat <b>WhatsApp</b> (opsional, maks. {{ $pengaturan['wa_maks_harian'] }} pesan/hari)</span></label></div>
       <div class="field"><label class="check"><input type="checkbox" name="setuju" value="1" @checked(old('setuju'))> <span>Saya setuju data saya diproses sesuai <a href="{{ route('privasi') }}" target="_blank">Kebijakan Privasi</a> (wajib)</span></label>
         @error('setuju')<div class="err-msg">{{ $message }}</div>@enderror</div>
       @include('partials.captcha')

@@ -13,8 +13,8 @@ class Pasien extends Model
 
     protected $table = 'pasien';
     protected $primaryKey = 'id_pasien';
-    protected $fillable = ['id_akun', 'no_rm', 'nik', 'no_kk', 'no_bpjs', 'foto_ktp', 'nama', 'tgl_lahir', 'jenis_kelamin', 'alamat', 'no_tlp'];
-    protected $casts = ['tgl_lahir' => 'date'];
+    protected $fillable = ['id_akun', 'no_rm', 'nik', 'no_kk', 'no_bpjs', 'foto_ktp', 'nama', 'tgl_lahir', 'jenis_kelamin', 'alamat', 'no_tlp', 'wa_opt_in'];
+    protected $casts = ['tgl_lahir' => 'date', 'wa_opt_in' => 'boolean'];
 
     public function akun(): BelongsTo { return $this->belongsTo(Akun::class, 'id_akun'); }
     public function konsultasi(): HasMany { return $this->hasMany(Konsultasi::class, 'id_pasien'); }

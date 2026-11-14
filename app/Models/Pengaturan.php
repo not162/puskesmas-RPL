@@ -23,6 +23,8 @@ class Pengaturan extends Model
         'kepala_puskesmas' => '',
         'nip_kepala' => '',
         'otp_petugas' => '',
+        'wa_langkah' => '5,7,9',
+        'wa_maks_harian' => '10',
         'maks_gagal_login' => '5',
         'menit_kunci' => '15',
         'tolak_nama_ganda' => '1',
@@ -38,13 +40,15 @@ class Pengaturan extends Model
 
     public static function semua(): array
     {
-        return Cache::remember('pengaturan', 300, function () {
+        // Cache hanya nilai dari DB; nilai bawaan digabung setiap kali agar kunci baru langsung tersedia
+        $db = Cache::remember('pengaturan:db', 300, function () {
             try {
-                return array_merge(self::BAWAAN, static::pluck('nilai', 'kunci')->all());
+                return static::pluck('nilai', 'kunci')->all();
             } catch (\Throwable) {
-                return self::BAWAAN;
+                return [];
             }
         });
+        return array_merge(self::BAWAAN, $db);
     }
 
     public static function nilai(string $kunci): ?string
@@ -54,7 +58,7 @@ class Pengaturan extends Model
 
     protected static function booted(): void
     {
-        static::saved(fn () => Cache::forget('pengaturan'));
+        static::saved(fn () => Cache::forget('pengaturan:db'));
     }
 }
 

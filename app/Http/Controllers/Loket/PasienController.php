@@ -32,7 +32,7 @@ class PasienController extends Controller
     {
         $data = $this->valid($request);
         [$pasien, $antrian] = DB::transaction(function () use ($data) {
-            $p = Pasien::create(collect($data)->except('id_spesialisasi', 'keluhan_awal')->all() + ['no_rm' => Pasien::nomorRmBaru()]);
+            $p = Pasien::create(collect($data)->except('id_spesialisasi', 'keluhan_awal')->all() + ['no_rm' => Pasien::nomorRmBaru(), 'wa_opt_in' => request()->boolean('wa_opt_in')]);
             $a = null;
             if (! empty($data['id_spesialisasi'])) {
                 $a = $this->buatAntrian($p, Spesialisasi::find($data['id_spesialisasi']), $data['keluhan_awal'] ?? null);
@@ -51,7 +51,7 @@ class PasienController extends Controller
 
     public function update(Request $request, Pasien $pasien)
     {
-        $pasien->update(collect($this->valid($request, $pasien))->except('id_spesialisasi', 'keluhan_awal')->all());
+        $pasien->update(collect($this->valid($request, $pasien))->except('id_spesialisasi', 'keluhan_awal')->all() + ['wa_opt_in' => $request->boolean('wa_opt_in')]);
         return $this->kembali('success', 'Data diperbarui', "Data {$pasien->nama} disimpan.", route('loket.pasien.index'));
     }
 

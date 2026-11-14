@@ -12,6 +12,7 @@
     @if ($akun->pasien)
       @include('partials.field', ['name' => 'no_tlp', 'label' => 'Nomor HP', 'value' => $akun->pasien->no_tlp])
       @include('partials.field', ['name' => 'alamat', 'label' => 'Alamat', 'type' => 'textarea', 'value' => $akun->pasien->alamat, 'attrs' => 'rows="2"'])
+      <label class="check field"><input type="checkbox" name="wa_opt_in" value="1" @checked(old('wa_opt_in', $akun->pasien->wa_opt_in))> Terima notifikasi & OTP cadangan lewat WhatsApp</label>
     @endif
     <hr style="border:0;border-top:1px solid var(--line);margin:18px 0">
     <p class="muted">Kosongkan bila tidak ingin mengganti kata sandi.</p>
