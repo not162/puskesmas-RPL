@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Dashboard Dokter')
+@section('title', 'Dasbor Dokter')
 @section('content')
 <div id="live-dash" data-live="antrian,konsultasi,resep">
 <div class="page-h"><div><h2>{{ $dokter->nama }}</h2><p>{{ $dokter->spesialisasi->nama === 'Kandungan' ? 'Dokter Kandungan' : 'Dokter Umum' }} · {{ $dokter->spesialisasi->poli }} · {{ $dokter->jadwal }}</p></div>

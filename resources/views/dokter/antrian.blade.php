@@ -2,7 +2,7 @@
 @section('title', 'Antrian '.$dokter->spesialisasi->poli)
 @section('content')
 <div class="page-h"><div><h2>Antrean {{ $dokter->spesialisasi->poli }} hari ini</h2><p>Pasien yang sudah check-in dapat dipanggil dan diperiksa.</p></div>
-  <span class="live"><span class="dot"></span> Sinkron real-time dengan loket</span></div>
+  <span class="live"><span class="dot"></span> Diperbarui otomatis bersama loket</span></div>
 <div id="live-dokter-antrian" data-live="antrian" class="table-wrap"><table>
   <tr><th>No.</th><th>Pasien</th><th>Usia / JK</th><th>Keluhan awal</th><th>Status</th><th>Aksi</th></tr>
   @forelse ($antrian as $a)

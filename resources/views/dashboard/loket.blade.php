@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Dashboard Loket')
+@section('title', 'Dasbor Loket')
 @section('content')
 <div id="live-dash" data-live="antrian,pasien">
 <div class="page-h"><div><h2>Loket Pendaftaran</h2><p>{{ now()->locale('id')->translatedFormat('l, d F Y') }}</p></div>

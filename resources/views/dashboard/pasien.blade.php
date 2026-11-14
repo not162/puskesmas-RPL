@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Dashboard Pasien')
+@section('title', 'Dasbor Pasien')
 @section('content')
 <div id="live-dash" data-live="antrian,konsultasi,resep">
 <div class="page-h"><div><h2>Halo, {{ $pasien->nama }}</h2><p>No. RM <b>{{ $pasien->no_rm }}</b> · NIK {{ $pasien->nikSamaran() }}</p></div>

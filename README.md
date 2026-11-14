@@ -200,6 +200,12 @@ Di Laragon tanpa worker, pakai `OTP_PENGIRIMAN=langsung`. Semua aset (font, Swag
 
 Rencana perbaikan bertahap ada di [docs/RENCANA-SPRINT.md](docs/RENCANA-SPRINT.md).
 
+## Privasi & pengujian
+
+- Kebijakan privasi di `/kebijakan-privasi` mengacu UU PDP, UU ITE, UU Kesehatan, Permenkes 24/2022, dan ISO/IEC 27001:2022 (bukan klaim sertifikasi). Nomor Permenkes tambahan diisi di Pengaturan.
+- Pasien dapat mengunduh salinan datanya: **Profil → Unduh data saya**.
+- Berita acara pengujian: [docs/BERITA-ACARA-UJI.md](docs/BERITA-ACARA-UJI.md). Uji beban: `php tests/beban.php http://alamat-server 50 2`.
+
 ## Hak cipta
 
 🇮🇩 Dibuat di Indonesia · © 2026 Seluruh hak cipta dilindungi · Grup NussCorp Technologies Indonesia

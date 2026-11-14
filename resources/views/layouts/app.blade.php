@@ -66,7 +66,7 @@
       <button class="btn btn-icon btn-ghost mobile-only" data-side aria-label="Buka menu"><x-ico n="menu"/></button>
       <h1>@yield('title')</h1>
       <div class="nav-actions">
-        <span class="live live-chip" title="Sinkron real-time antar peran"><span class="dot"></span><span class="hide-sm">Live</span></span>
+        <span class="live live-chip" title="Data diperbarui otomatis"><span class="dot"></span><span class="hide-sm">Langsung</span></span>
         <button class="btn btn-icon btn-ghost" data-alert-toggle aria-pressed="false" title="Aktifkan alert suara & pop-up perangkat" aria-label="Aktifkan alert"><span data-alert-icon><x-ico n="bell-off"/></span></button>
         <button class="btn btn-icon btn-ghost" data-toggle-theme aria-label="Ganti tema"><span data-theme-icon></span></button>
         <div class="dropdown">
@@ -82,7 +82,7 @@
       </div>
     </header>
     <div class="content">@yield('content')</div>
-    <footer class="app-footer">🇮🇩 Dibuat di Indonesia · © 2026 Seluruh hak cipta dilindungi · Grup NussCorp Technologies Indonesia</footer>
+    <footer class="app-footer"><span class="bendera" aria-hidden="true"></span>Dibuat di Indonesia · © 2026 Seluruh hak cipta dilindungi · Grup NussCorp Technologies Indonesia</footer>
   </div>
 </div>
 <nav class="bottomnav" aria-label="Navigasi bawah">

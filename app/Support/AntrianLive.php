@@ -11,7 +11,13 @@ use App\Models\Spesialisasi;
  */
 class AntrianLive
 {
+    /** Disimpan sementara 5 dtk (dibuang otomatis setiap antrean berubah) agar banyak layar tidak membebani basis data. */
     public static function data(): array
+    {
+        return \Illuminate\Support\Facades\Cache::remember('antrian-live', 5, fn () => self::hitung());
+    }
+
+    private static function hitung(): array
     {
         $hariIni = now()->toDateString();
         $poli = Spesialisasi::orderBy('id_spesialisasi')->get()->map(function (Spesialisasi $sp) use ($hariIni) {

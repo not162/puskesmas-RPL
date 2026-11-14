@@ -5,7 +5,7 @@
   @if ($akun->exists) @method('PUT') @endif
   <div class="field"><label for="id_peran">Peran</label>
     <select id="id_peran" name="id_peran" class="input @error('id_peran') err @enderror" {{ $akun->exists ? 'disabled' : 'required' }}>
-      <option value="">— Pilih peran —</option>
+      <option value="">Pilih peran</option>
       @foreach ($peran as $p)<option value="{{ $p->id_peran }}" data-role="{{ $p->nama_peran }}" @selected(old('id_peran', $akun->id_peran) == $p->id_peran)>{{ $p->label }}</option>@endforeach
     </select>
     <div class="hint">Dokter hanya tersedia sebagai <b>Dokter Umum</b> atau <b>Dokter Kandungan</b>; spesialisasi diatur otomatis.</div>

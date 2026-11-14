@@ -4,7 +4,7 @@
 <div class="auth-main">
   <div class="card auth-card wide">
     <h1 style="font-size:24px;font-weight:800">Daftar Pasien</h1>
-    <p class="muted">Isi data sesuai KTP. Username, email, NIK, nama, dan Nomor KK hanya dapat terdaftar satu kali — bila sudah terdaftar Anda diarahkan ke halaman masuk / lupa password. Setelah mengisi, kode OTP dikirim ke email Anda.</p>
+    <p class="muted">Isi data sesuai KTP. Satu NIK, Nomor KK, nama, email, dan username hanya bisa didaftarkan sekali. Jika data Anda sudah terdaftar, Anda akan diarahkan ke halaman masuk. Setelah formulir dikirim, kode OTP dikirim ke email Anda.</p>
     <div class="alert alert-warn" id="ganda-box" hidden><x-ico n="alert"/><div><b><span id="ganda-label"></span> sudah terdaftar.</b> Silakan <a href="{{ route('login') }}">masuk</a> atau <a href="{{ route('password.request') }}">gunakan Lupa password</a>.</div></div>
     <form method="POST" action="{{ route('register') }}" enctype="multipart/form-data" novalidate>
       @csrf

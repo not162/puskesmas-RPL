@@ -28,6 +28,8 @@ class AppServiceProvider extends ServiceProvider
             $model::saved(fn ($m) => \App\Support\Siaran::dariModel($m));
             $model::deleted(fn ($m) => \App\Support\Siaran::dariModel($m));
         }
+        \App\Models\Antrian::saved(fn () => \Illuminate\Support\Facades\Cache::forget('antrian-live'));
+        \App\Models\Antrian::deleted(fn () => \Illuminate\Support\Facades\Cache::forget('antrian-live'));
         // Notifikasi baru (channel database) -> sinyal ke kanal pribadi akun penerima
         Event::listen(\Illuminate\Notifications\Events\NotificationSent::class, function ($e) {
             if ($e->notifiable instanceof \App\Models\Akun) \App\Support\Siaran::notifikasi($e->notifiable->id_akun);

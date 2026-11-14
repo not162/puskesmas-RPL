@@ -5,7 +5,10 @@
   <div class="card"><h3>Data akun</h3>
     <dl class="kv"><dt>Username</dt><dd>{{ '@'.$akun->username }}</dd><dt>Nama</dt><dd>{{ $akun->namaTampil() }}</dd><dt>Peran</dt><dd>{{ $akun->peran->label }}</dd><dt>Status</dt><dd>@include('partials.status', ['s' => $akun->status])</dd>
       @if ($akun->pasien)<dt>No. RM</dt><dd>{{ $akun->pasien->no_rm }}</dd><dt>NIK</dt><dd>{{ $akun->pasien->nik }}</dd><dt>Tanggal lahir</dt><dd>{{ $akun->pasien->tgl_lahir?->format('d/m/Y') }}</dd>@endif
-    </dl></div>
+    </dl>
+    <div class="notif-preview mt"><b>Data pribadi Anda</b><br><span class="muted">Sesuai UU Pelindungan Data Pribadi, Anda berhak memperoleh salinan data Anda.</span><br>
+      <a class="btn btn-sm mt" href="{{ route('profil.unduh') }}"><x-ico n="download"/> Unduh data saya</a> <a class="btn btn-sm btn-ghost mt" href="{{ route('privasi') }}">Kebijakan privasi</a></div>
+    </div>
   <form class="card" method="POST" action="{{ route('profil') }}">@csrf @method('PUT')
     <h3>Ubah profil</h3>
     @include('partials.field', ['name' => 'email', 'label' => 'Email'.($akun->pasien ? ' (opsional)' : ''), 'type' => 'email', 'value' => $akun->email])

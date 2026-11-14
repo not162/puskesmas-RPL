@@ -17,6 +17,8 @@
       @include('partials.field', ['name' => 'kepala_puskesmas', 'label' => 'Nama Kepala Puskesmas', 'value' => $nilai['kepala_puskesmas']])
       @include('partials.field', ['name' => 'nip_kepala', 'label' => 'NIP Kepala Puskesmas', 'value' => $nilai['nip_kepala']])
     </div>
+    @include('partials.field', ['name' => 'slogan', 'label' => 'Slogan (tampil di layar pembuka)', 'value' => $nilai['slogan']])
+    @include('partials.field', ['name' => 'permenkes_tambahan', 'label' => 'Permenkes tambahan di Kebijakan Privasi', 'value' => $nilai['permenkes_tambahan'], 'hint' => 'Contoh: Permenkes No. … Tahun 2025 tentang …'])
     @include('partials.field', ['name' => 'jam_layanan', 'label' => 'Jam layanan', 'value' => $nilai['jam_layanan']])
     @include('partials.field', ['name' => 'maps_url', 'label' => 'Tautan Google Maps', 'type' => 'url', 'value' => $nilai['maps_url']])
     <h3 class="mt">Keamanan login</h3>

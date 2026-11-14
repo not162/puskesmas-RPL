@@ -7,7 +7,7 @@
     <p class="muted">Langkah 3 · Tuliskan keluhan Anda. Dokter poli terkait akan menanggapi dan menyarankan apakah perlu datang.</p>
     <div class="field"><label for="id_spesialisasi">Poli</label>
       <select class="input @error('id_spesialisasi') err @enderror" id="id_spesialisasi" name="id_spesialisasi" required>
-        <option value="">— Pilih poli —</option>
+        <option value="">Pilih poli</option>
         @foreach ($spesialisasi as $s)<option value="{{ $s->id_spesialisasi }}" @selected(old('id_spesialisasi') == $s->id_spesialisasi)>{{ $s->poli }}</option>@endforeach
       </select>@error('id_spesialisasi')<div class="err-msg">{{ $message }}</div>@enderror</div>
     @include('partials.field', ['name' => 'keluhan', 'label' => 'Keluhan', 'type' => 'textarea', 'hint' => 'Minimal 10 karakter. Contoh: demam 3 hari, batuk berdahak, nafsu makan turun.', 'attrs' => 'rows="5" required minlength="10" maxlength="2000"'])

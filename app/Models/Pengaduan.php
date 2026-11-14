@@ -11,7 +11,7 @@ class Pengaduan extends Model
 {
     use Diaudit, HasUlids;
 
-    public const KATEGORI = ['layanan' => 'Pelayanan petugas', 'antrean' => 'Antrean', 'obat' => 'Obat & farmasi', 'fasilitas' => 'Fasilitas', 'lainnya' => 'Lainnya'];
+    public const KATEGORI = ['layanan' => 'Pelayanan petugas', 'antrean' => 'Antrean', 'obat' => 'Obat & farmasi', 'fasilitas' => 'Fasilitas', 'privasi' => 'Data pribadi (lihat, perbaiki, hapus)', 'lainnya' => 'Lainnya'];
 
     protected $table = 'pengaduan';
     protected $primaryKey = 'id_pengaduan';

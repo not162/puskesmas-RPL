@@ -1,82 +1,167 @@
 @extends('layouts.public')
 @section('title', 'Beranda')
 @section('content')
-<section class="hero container">
-  <div class="hero-icon"><x-ico n="cross"/></div>
-  <h1>Layanan Kesehatan Puskesmas</h1>
-  <p class="lead">Ambil antrean online, konsultasi dengan dokter sebelum datang, pantau panggilan secara langsung, dan cek resep obat Anda dengan mudah.</p>
-  <span class="live"><span class="dot"></span> Data tampil langsung dari database · <span id="live-time">memuat…</span></span>
+@php
+  $masuk = fn ($rute) => auth()->check() ? route($rute) : route('login');
+  $praktikHariIni = collect($dokter)->whereNotNull('hari_ini')->count();
+@endphp
 
-  <p class="ask">Apa yang ingin Anda lakukan?</p>
+{{-- ============ HERO ============ --}}
+<section class="hero2">
+  <div class="container hero2-grid">
+    <div>
+      <span class="chip-hero"><x-ico n="check"/> Teman sehat untuk keluarga Anda</span>
+      <h1>Berobat ke Puskesmas jadi lebih mudah</h1>
+      <p class="lead-kiri">Ambil nomor antrean dari rumah, ceritakan keluhan ke dokter sebelum datang, lalu pantau kapan nomor Anda dipanggil. Tidak perlu menunggu lama di ruang tunggu.</p>
+      <div class="flex hero2-aksi">
+        <a href="{{ $masuk('pasien.antrian.create') }}" class="btn btn-primary btn-lg"><x-ico n="ticket"/> Ambil Antrean</a>
+        <a href="{{ route('publik.dokter') }}" class="btn btn-lg"><x-ico n="calendar"/> Lihat Jadwal Dokter</a>
+      </div>
+      <p class="hero2-catatan"><x-ico n="check" class="ico ok"/> Belum punya akun? <a href="{{ route('register') }}">Daftar sekali</a>, langsung bisa dipakai.</p>
+    </div>
+
+    <div class="hero2-kartu" aria-label="Antrean hari ini">
+      <div class="flex between"><b>Antrean hari ini</b><span class="live"><span class="dot"></span> <span id="live-time">memuat…</span></span></div>
+      <div id="live-poli" class="hero2-poli">
+        @foreach ($spesialisasi as $sp)
+          <div class="poli-baris"><div><b>{{ $sp->poli }}</b><span class="muted">memuat…</span></div><div class="poli-no">—</div></div>
+        @endforeach
+      </div>
+      <div class="hero2-kaki">
+        <span><x-ico n="steth"/> {{ $praktikHariIni }} dokter praktik hari ini</span>
+        <a href="{{ route('layar') }}">Layar antrean →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+{{-- ============ KEBUTUHAN ============ --}}
+<section class="section container">
+  <span class="eyebrow-kiri">Mulai dari sini</span>
+  <h2 class="judul-kiri">Apa yang Anda butuhkan hari ini?</h2>
+  <p class="sub-kiri">Tidak perlu hafal nama menu. Pilih saja yang Anda perlukan.</p>
   <div class="intents">
-    <a class="intent" href="{{ auth()->check() ? route('pasien.antrian.create') : route('login') }}"><span class="ic c-blue"><x-ico n="ticket"/></span> Saya mau ambil antrean online</a>
-    <a class="intent" href="{{ auth()->check() ? route('pasien.konsultasi.create') : route('login') }}"><span class="ic c-green"><x-ico n="chat"/></span> Saya mau konsultasi online dulu</a>
+    <a class="intent" href="{{ $masuk('pasien.antrian.create') }}"><span class="ic c-blue"><x-ico n="ticket"/></span> Saya mau ambil nomor antrean</a>
+    <a class="intent" href="{{ $masuk('pasien.konsultasi.create') }}"><span class="ic c-green"><x-ico n="chat"/></span> Saya mau tanya dokter dulu</a>
     <a class="intent" href="{{ route('layar') }}"><span class="ic c-red"><x-ico n="monitor"/></span> Saya mau lihat antrean sekarang</a>
     <a class="intent" href="{{ route('publik.dokter') }}"><span class="ic c-violet"><x-ico n="steth"/></span> Saya mau lihat jadwal dokter</a>
-    <a class="intent" href="{{ auth()->check() ? route('pasien.resep') : route('login') }}"><span class="ic c-teal"><x-ico n="pill"/></span> Saya mau cek resep & obat</a>
+    <a class="intent" href="{{ $masuk('pasien.resep') }}"><span class="ic c-teal"><x-ico n="pill"/></span> Saya mau cek resep & obat</a>
     <a class="intent" href="{{ route('register') }}"><span class="ic c-amber"><x-ico n="user"/></span> Saya pasien baru, mau daftar</a>
   </div>
 </section>
 
+{{-- ============ MENGAPA ============ --}}
+<section class="section latar-lembut">
+  <div class="container">
+    <span class="eyebrow-kiri">Mengapa lewat aplikasi</span>
+    <h2 class="judul-kiri">Datang tepat waktu, dilayani lebih cepat</h2>
+    <div class="grid g4 mt">
+      <div class="kartu-fitur"><span class="ic c-blue"><x-ico n="shield"/></span><b>Dokter resmi</b><p>Semua dokter terdaftar dengan Surat Tanda Registrasi yang berlaku.</p></div>
+      <div class="kartu-fitur"><span class="ic c-green"><x-ico n="calendar"/></span><b>Jadwal selalu terbaru</b><p>Lihat dokter yang praktik hari ini sebelum berangkat.</p></div>
+      <div class="kartu-fitur"><span class="ic c-violet"><x-ico n="chat"/></span><b>Tanya sebelum datang</b><p>Ceritakan keluhan, dokter memberi saran apakah perlu datang.</p></div>
+      <div class="kartu-fitur"><span class="ic c-teal"><x-ico n="lock"/></span><b>Data Anda terjaga</b><p>Nama dan NIK tidak pernah tampil di layar umum. <a href="{{ route('privasi') }}">Baca kebijakan</a>.</p></div>
+    </div>
+    <div class="angka-grid">
+      <div><b data-hitung="{{ $angka['pasien'] }}">{{ number_format($angka['pasien'], 0, ',', '.') }}</b><span>Pasien terdaftar</span></div>
+      <div><b data-hitung="{{ $angka['dokter'] }}">{{ $angka['dokter'] }}</b><span>Dokter</span></div>
+      <div><b data-hitung="{{ $angka['dilayani'] }}">{{ number_format($angka['dilayani'], 0, ',', '.') }}</b><span>Pasien dilayani bulan ini</span></div>
+      <div><b data-hitung="{{ $angka['info'] }}">{{ $angka['info'] }}</b><span>Info kesehatan</span></div>
+    </div>
+  </div>
+</section>
+
+{{-- ============ LAYANAN ============ --}}
 <section class="section container" id="layanan">
-  <span class="eyebrow">Layanan</span>
-  <h2 class="section-title">Poli & Antrean Hari Ini</h2>
-  <p class="section-sub">Antrean dihitung langsung. Identitas pasien dan data internal dokter tidak pernah ditampilkan di halaman publik.</p>
-  <div class="grid g2" id="live-poli">
+  <span class="eyebrow-kiri">Layanan</span>
+  <h2 class="judul-kiri">Mulai dari yang Anda rasakan</h2>
+  <div class="grid g4 mt">
     @foreach ($spesialisasi as $sp)
-      <div class="card"><div class="stat"><span class="ic {{ $loop->first ? 'c-blue' : 'c-violet' }}"><x-ico :n="$loop->first ? 'steth' : 'baby'"/></span><div><b>{{ $sp->poli }}</b><span>{{ $sp->dokter_count }} dokter · memuat antrean…</span></div></div></div>
+      <div class="kartu-layanan">
+        <span class="ic {{ $sp->nama === 'Kandungan' ? 'c-violet' : 'c-blue' }}"><x-ico :n="$sp->nama === 'Kandungan' ? 'baby' : 'steth'"/></span>
+        <b>{{ $sp->poli }}</b>
+        <p>{{ $sp->nama === 'Kandungan' ? 'Pemeriksaan kehamilan, kesehatan ibu dan anak, serta KB.' : 'Keluhan sehari-hari seperti demam, batuk, pusing, dan pemeriksaan umum.' }}</p>
+        <a href="{{ $masuk('pasien.antrian.create') }}">Ambil antrean →</a>
+      </div>
     @endforeach
+    <div class="kartu-layanan"><span class="ic c-green"><x-ico n="chat"/></span><b>Konsultasi online</b><p>Tanyakan keluhan ke dokter dari rumah sebelum memutuskan datang.</p><a href="{{ $masuk('pasien.konsultasi.create') }}">Mulai konsultasi →</a></div>
+    <div class="kartu-layanan"><span class="ic c-teal"><x-ico n="pill"/></span><b>Resep & obat</b><p>Pantau resep sampai obat siap diambil di bagian farmasi.</p><a href="{{ $masuk('pasien.resep') }}">Cek resep →</a></div>
   </div>
-  <p style="text-align:center;margin-top:18px"><a class="btn" href="{{ route('layar') }}"><x-ico n="monitor"/> Buka layar antrean penuh</a></p>
 </section>
 
+{{-- ============ DOKTER ============ --}}
+<section class="section latar-lembut">
+  <div class="container">
+    <div class="flex between">
+      <div><span class="eyebrow-kiri">Dokter kami</span><h2 class="judul-kiri mb0">Kenali dokter sebelum bertemu</h2></div>
+      <a href="{{ route('publik.dokter') }}" class="btn">Semua jadwal →</a>
+    </div>
+    <div class="grid g3 mt">
+      @foreach ($dokter as $d)
+        <div class="kartu-dokter">
+          <div class="flex"><span class="avatar">{{ mb_substr(preg_replace('/^dr\.?\s*/i', '', $d['nama']), 0, 1) }}</span>
+            <div><b>{{ $d['nama'] }}</b><span class="muted">{{ $d['spesialisasi'] === 'Kandungan' ? 'Dokter Kandungan' : 'Dokter Umum' }} · {{ $d['poli'] }}</span></div></div>
+          @if ($d['hari_ini'])<span class="badge b-ok mt">Praktik hari ini {{ $d['hari_ini'] }}</span>@else<span class="badge mt">Tidak praktik hari ini</span>@endif
+          <p class="muted mt mb0" style="font-size:13px">{{ $d['jadwal'] }}</p>
+          <a href="{{ $masuk('pasien.antrian.create') }}" class="btn btn-primary btn-sm mt">Ambil antrean</a>
+        </div>
+      @endforeach
+    </div>
+  </div>
+</section>
+
+{{-- ============ CARA PAKAI ============ --}}
 <section class="section container">
-  <span class="eyebrow">Cara Pakai</span>
-  <h2 class="section-title">Empat langkah sebelum datang</h2>
-  <p class="section-sub">Alur singkat, Anda selalu tahu langkah berikutnya. <a href="{{ route('alur') }}">Lihat alur lengkap 10 langkah →</a></p>
-  <div class="grid g4">
-    @foreach ([['01','Daftar akun','Isi NIK, data diri, dan email. Nomor rekam medis langsung dibuat.','user'],['02','Konsultasi online','Ceritakan keluhan, dokter poli menanggapi sebelum Anda datang.','chat'],['03','Ambil antrian','Pilih poli dan tanggal, unduh tiket antrian.','ticket'],['04','Datang & check-in','Tunjukkan tiket di loket, pantau panggilan di layar.','monitor']] as [$n,$j,$d,$i])
-      <div class="card"><span class="badge b-info">{{ $n }}</span><h3 class="mt" style="font-size:17px"><x-ico :n="$i"/> {{ $j }}</h3><p class="muted mb0">{{ $d }}</p></div>
-    @endforeach
+  <span class="eyebrow-kiri">Cara pakai</span>
+  <h2 class="judul-kiri">Empat langkah sebelum datang</h2>
+  <p class="sub-kiri">Langkahnya singkat, dan Anda selalu tahu apa yang harus dilakukan berikutnya. <a href="{{ route('alur') }}">Lihat alur lengkap →</a></p>
+  <ol class="langkah4">
+    <li><span>01</span><b>Daftar akun</b><p>Isi data sesuai KTP. Nomor rekam medis langsung dibuat.</p></li>
+    <li><span>02</span><b>Tanya dokter (bila perlu)</b><p>Ceritakan keluhan, dokter memberi saran awal.</p></li>
+    <li><span>03</span><b>Ambil antrean</b><p>Pilih poli dan tanggal, simpan tiket QR di HP.</p></li>
+    <li><span>04</span><b>Datang & tunjukkan tiket</b><p>Pindai QR di loket, lalu tunggu panggilan.</p></li>
+  </ol>
+</section>
+
+{{-- ============ KABAR ============ --}}
+<section class="section latar-lembut">
+  <div class="container">
+    <div class="flex between"><div><span class="eyebrow-kiri">Kabar & info kesehatan</span><h2 class="judul-kiri mb0">Kabar terbaru dari Puskesmas</h2></div><a href="{{ route('info') }}" class="btn">Semua info →</a></div>
+    <div class="grid g3 mt">
+      @forelse ($pengumuman as $p)
+        <article class="card"><span class="badge {{ ['agenda' => 'b-warn', 'edukasi' => 'b-ok'][$p->kategori] ?? 'b-info' }}">{{ ['agenda' => 'Agenda', 'edukasi' => 'Info sehat'][$p->kategori] ?? 'Pengumuman' }}</span>
+          <h3 class="mt" style="font-size:17px">{{ $p->judul }}</h3><p class="muted">{{ \Illuminate\Support\Str::limit($p->isi, 130) }}</p>
+          <small><x-ico n="calendar"/> {{ $p->tanggal->locale('id')->translatedFormat('d F Y') }}</small></article>
+      @empty
+        <div class="card empty">Belum ada kabar terbaru.</div>
+      @endforelse
+    </div>
   </div>
 </section>
 
-<section class="section container">
-  <span class="eyebrow">Dokter</span>
-  <h2 class="section-title">Dokter Umum & Dokter Kandungan</h2>
-  <p class="section-sub">Kenali dokter dan jadwal praktik sebelum berkunjung.</p>
-  <div class="grid g3">
-    @foreach ($dokter as $d)
-      <div class="card"><div class="stat"><span class="ic {{ $d['spesialisasi']==='Kandungan' ? 'c-violet' : 'c-blue' }}"><x-ico n="steth"/></span><div><b style="font-size:16px">{{ $d['nama'] }}</b><span>{{ $d['poli'] }}</span></div></div>
-        <p class="muted mt mb0"><x-ico n="clock"/> {{ $d['jadwal'] ?? 'Jadwal menyusul' }}</p></div>
-    @endforeach
+{{-- ============ TANYA JAWAB ============ --}}
+<section class="section container" id="tanya">
+  <span class="eyebrow-kiri">Tanya jawab</span>
+  <h2 class="judul-kiri">Pertanyaan yang sering ditanyakan</h2>
+  <div class="faq mt">
+    <details><summary>Apakah aplikasi ini menggantikan pemeriksaan dokter?</summary><p>Tidak. Konsultasi online hanya saran awal. Diagnosis dan pengobatan tetap dilakukan saat Anda diperiksa langsung.</p></details>
+    <details><summary>Apakah perlu akun untuk melihat antrean dan jadwal?</summary><p>Tidak perlu. Layar antrean dan jadwal dokter bisa dilihat siapa saja. Akun diperlukan untuk mengambil antrean, konsultasi, dan melihat resep.</p></details>
+    <details><summary>Bagaimana jika saya tidak punya email atau HP?</summary><p>Datang langsung ke loket. Petugas akan mendaftarkan Anda dan memberi nomor antrean di tempat.</p></details>
+    <details><summary>Apakah nama saya akan muncul di layar antrean?</summary><p>Tidak. Layar umum hanya menampilkan nomor antrean dan nama poli.</p></details>
+    <details><summary>Saya lupa kata sandi, bagaimana?</summary><p>Pilih <a href="{{ route('password.request') }}">Lupa password</a>. Kode OTP dikirim ke email Anda untuk membuat kata sandi baru.</p></details>
+    <details><summary>Apa yang harus dilakukan dalam keadaan darurat?</summary><p>Jangan menunggu antrean. Segera ke IGD terdekat atau hubungi <b>119</b>.</p></details>
   </div>
 </section>
 
-<section class="section container">
-  <span class="eyebrow">Pengumuman & Agenda</span>
-  <h2 class="section-title">Kabar Terbaru Puskesmas</h2>
-  <p class="section-sub">Informasi terkini, jadwal kegiatan, dan edukasi kesehatan.</p>
-  <div class="grid g3">
-    @forelse ($pengumuman as $p)
-      <article class="card"><span class="badge {{ ['agenda'=>'b-warn','edukasi'=>'b-ok'][$p->kategori] ?? 'b-info' }}">{{ ucfirst($p->kategori) }}</span>
-        <h3 class="mt" style="font-size:17px">{{ $p->judul }}</h3><p class="muted">{{ \Illuminate\Support\Str::limit($p->isi, 140) }}</p>
-        <small><x-ico n="calendar"/> {{ $p->tanggal->locale('id')->translatedFormat('d F Y') }}</small></article>
-    @empty
-      <div class="card empty">Belum ada pengumuman.</div>
-    @endforelse
-  </div>
-</section>
-
+{{-- ============ BANTUAN ============ --}}
 <section class="section container" id="bantuan">
-  <span class="eyebrow">Bantuan</span>
-  <h2 class="section-title">Hubungi Kami & Lokasi</h2>
-  <p class="section-sub">{{ $pengaturan['jam_layanan'] }} · <a href="https://wa.me/{{ $pengaturan['whatsapp'] }}" target="_blank" rel="noopener">Chat WhatsApp</a></p>
-  <div class="grid g2">
-    <div class="card"><h3>Saluran bantuan</h3>
-      <ul class="list-plain"><li><span><x-ico n="phone"/> Telepon / WhatsApp</span><b>{{ $pengaturan['telepon'] }}</b></li><li><span><x-ico n="mail"/> Email</span><b>{{ $pengaturan['email'] }}</b></li><li><span><x-ico n="alert"/> Gawat darurat</span><b>119</b></li></ul></div>
-    <div class="card"><h3>Alamat</h3><p class="muted"><x-ico n="map"/> {{ $pengaturan['alamat'] }}</p>
-      <a class="btn" target="_blank" rel="noopener" href="{{ $pengaturan['maps_url'] }}"><x-ico n="map"/> Buka di Google Maps</a></div>
+  <div class="cta-band">
+    <div><h2>Butuh bantuan?</h2><p>{{ $pengaturan['jam_layanan'] }}</p>
+      <p class="mb0"><x-ico n="map"/> {{ $pengaturan['alamat'] }}</p></div>
+    <div class="flex">
+      <a class="btn btn-lg btn-putih" target="_blank" rel="noopener" href="https://wa.me/{{ $pengaturan['whatsapp'] }}"><x-ico n="chat"/> Chat WhatsApp</a>
+      <a class="btn btn-lg btn-garis" href="tel:{{ preg_replace('/[^0-9+]/', '', $pengaturan['telepon']) }}"><x-ico n="phone"/> {{ $pengaturan['telepon'] }}</a>
+      <a class="btn btn-lg btn-garis" target="_blank" rel="noopener" href="{{ $pengaturan['maps_url'] }}"><x-ico n="map"/> Petunjuk arah</a>
+    </div>
   </div>
 </section>
 @endsection
@@ -84,14 +169,15 @@
 <script>
 (function () {
   const load = () => fetch(@json(route('live.antrian')), {headers: {Accept: 'application/json'}}).then(r => r.json()).then(d => {
-    document.getElementById('live-time').textContent = 'diperbarui ' + d.diperbarui;
+    document.getElementById('live-time').textContent = 'pukul ' + d.diperbarui.slice(0, 5);
     const box = document.getElementById('live-poli'); box.innerHTML = '';
-    d.poli.forEach((p, i) => {
-      const el = document.createElement('div'); el.className = 'card';
-      el.innerHTML = `<div class="flex between"><div><b style="font-size:17px"></b><div class="muted s"></div></div><div style="text-align:right"><div class="muted" style="font-size:12px">Sedang dipanggil</div><div class="n" style="font-size:30px;font-weight:800;color:var(--brand)"></div></div></div>`;
+    d.poli.forEach(p => {
+      const el = document.createElement('div'); el.className = 'poli-baris';
+      el.innerHTML = '<div><b></b><span class="muted"></span></div><div class="poli-no"></div>';
       el.querySelector('b').textContent = p.poli;
-      el.querySelector('.s').textContent = `${p.menunggu} menunggu · ${p.selesai} selesai · ${p.total} total hari ini`;
-      el.querySelector('.n').textContent = p.sedang_dipanggil || '—';
+      el.querySelector('span').textContent = `${p.menunggu} menunggu · ${p.selesai} selesai`;
+      el.querySelector('.poli-no').textContent = p.sedang_dipanggil || '—';
+      el.querySelector('.poli-no').title = 'Nomor yang sedang dipanggil';
       box.append(el);
     });
   }).catch(() => {});
@@ -100,4 +186,3 @@
 })();
 </script>
 @endpush
-

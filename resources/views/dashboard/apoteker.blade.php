@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Dashboard Farmasi')
+@section('title', 'Dasbor Farmasi')
 @section('content')
 <div id="live-dash" data-live="resep,obat">
 <div class="grid g3">

@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Pengaduan')
 @section('content')
-<div class="page-h"><div><h2>Pengaduan pasien</h2><p>Masuk secara real-time dari aplikasi pasien.</p></div>
+<div class="page-h"><div><h2>Pengaduan pasien</h2><p>Pengaduan baru dari pasien muncul otomatis di sini.</p></div>
   <div class="tabs" style="margin:0">@foreach (['aktif' => 'Aktif', 'baru' => 'Baru', 'diproses' => 'Diproses', 'selesai' => 'Selesai', 'semua' => 'Semua'] as $s => $l)<a class="{{ $status === $s ? 'on' : '' }}" href="?status={{ $s }}">{{ $l }}</a>@endforeach</div></div>
 <div class="table-wrap" id="live-pengaduan" data-live="pengaduan"><table>
   <tr><th>Waktu</th><th>Pelapor</th><th>Kategori</th><th>Judul</th><th>Status</th><th></th></tr>

@@ -9,7 +9,7 @@
       <div class="alert alert-ok"><x-ico n="chat"/><div>Antrean ini ditautkan dengan konsultasi online Anda tanggal {{ $konsultasi->tanggal->format('d/m/Y') }}.</div></div>@endif
     <div class="field"><label for="id_spesialisasi">Poli tujuan</label>
       <select class="input @error('id_spesialisasi') err @enderror" name="id_spesialisasi" id="id_spesialisasi" required>
-        <option value="">— Pilih poli —</option>
+        <option value="">Pilih poli</option>
         @foreach ($spesialisasi as $s)<option value="{{ $s->id_spesialisasi }}" @selected(old('id_spesialisasi', $konsultasi?->id_spesialisasi) == $s->id_spesialisasi)>{{ $s->poli }} ({{ $s->nama === 'Kandungan' ? 'Dokter Kandungan' : 'Dokter Umum' }})</option>@endforeach
       </select>@error('id_spesialisasi')<div class="err-msg">{{ $message }}</div>@enderror</div>
     @include('partials.field', ['name' => 'tanggal', 'label' => 'Tanggal kunjungan', 'type' => 'date', 'value' => today()->toDateString(), 'attrs' => 'required min="'.today()->toDateString().'" max="'.today()->addDays((int) $pengaturan['maks_hari_antrean'])->toDateString().'"'])

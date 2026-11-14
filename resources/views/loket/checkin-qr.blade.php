@@ -4,7 +4,7 @@
 <div class="grid g2">
   <form class="card" method="POST" action="{{ route('loket.qr') }}" id="qr-form">@csrf
     <h3>Pindai QR tiket</h3>
-    <p class="muted">Arahkan pemindai ke QR pada tiket pasien (atau ketik kode). Keaslian tiket diverifikasi dengan tanda tangan <b>HMAC-SHA256</b>; tiket palsu/diubah otomatis ditolak.</p>
+    <p class="muted">Arahkan pemindai ke QR pada tiket pasien (atau ketik kode). Keaslian tiket diperiksa dengan tanda tangan digital; tiket palsu atau yang diubah otomatis ditolak.</p>
     <div class="field"><label for="qr">Isi QR</label><input id="qr" name="qr" class="input mono" autofocus autocomplete="off" placeholder="PKM1.xxxxxxxx.xxxxxxxx" required></div>
     <div class="flex"><button class="btn btn-primary"><x-ico n="check"/> Verifikasi & check-in</button>
       <button type="button" class="btn" id="cam-btn"><x-ico n="qr"/> Pakai kamera</button></div>

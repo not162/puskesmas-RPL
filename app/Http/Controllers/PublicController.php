@@ -16,6 +16,13 @@ class PublicController extends Controller
             'pengumuman' => Pengumuman::where('terbit', true)->latest('tanggal')->limit(6)->get(),
             'spesialisasi' => Spesialisasi::withCount('dokter')->get(),
             'dokter' => $this->dokterPublik(),
+            // Angka ringkasan saja (aman untuk publik)
+            'angka' => [
+                'pasien' => \App\Models\Pasien::count(),
+                'dokter' => Dokter::count(),
+                'dilayani' => \App\Models\Antrian::where('status', 'selesai')->whereMonth('tanggal', now()->month)->whereYear('tanggal', now()->year)->count(),
+                'info' => Pengumuman::where('terbit', true)->count(),
+            ],
         ]);
     }
 
@@ -58,7 +65,11 @@ class PublicController extends Controller
     private function dokterPublik()
     {
         return Dokter::with('spesialisasi', 'jadwalPraktik')->orderBy('nama')->get()
-            ->map(fn (Dokter $d) => ['nama' => $d->nama, 'spesialisasi' => $d->spesialisasi->nama, 'poli' => $d->spesialisasi->poli, 'jadwal' => $d->ringkasJadwal()]);
+            ->map(function (Dokter $d) {
+                $hariIni = $d->jadwalPraktik->where('aktif', true)->firstWhere('hari', now()->dayOfWeekIso);
+                return ['nama' => $d->nama, 'spesialisasi' => $d->spesialisasi->nama, 'poli' => $d->spesialisasi->poli, 'jadwal' => $d->ringkasJadwal(),
+                    'hari_ini' => $hariIni ? substr($hariIni->jam_mulai, 0, 5).'–'.substr($hariIni->jam_selesai, 0, 5) : null];
+            });
     }
 }
 

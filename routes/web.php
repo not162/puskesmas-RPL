@@ -66,6 +66,7 @@ Route::middleware(['auth', 'aktif'])->group(function () {
 
     Route::get('/profil', [ProfilController::class, 'edit'])->name('profil');
     Route::put('/profil', [ProfilController::class, 'update']);
+    Route::get('/profil/unduh-data', [ProfilController::class, 'unduhData'])->middleware('throttle:5,1,unduh-data')->name('profil.unduh');
 
     /* ----- Pasien ----- */
     Route::middleware('peran:'.Peran::PASIEN)->prefix('pasien')->name('pasien.')->group(function () {

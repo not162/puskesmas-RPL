@@ -11,7 +11,7 @@
     <div id="rx-rows">
       @foreach (old('obat', [[]]) as $i => $row)
         <div class="rx-row">
-          <select name="obat[{{ $i }}][id_obat]" class="input"><option value="">— Pilih obat —</option>@foreach ($obat as $o)<option value="{{ $o->id_obat }}" @selected(($row['id_obat'] ?? null) == $o->id_obat)>{{ $o->nama_obat }} (stok {{ $o->stok }})</option>@endforeach</select>
+          <select name="obat[{{ $i }}][id_obat]" class="input"><option value="">Pilih obat</option>@foreach ($obat as $o)<option value="{{ $o->id_obat }}" @selected(($row['id_obat'] ?? null) == $o->id_obat)>{{ $o->nama_obat }} (stok {{ $o->stok }})</option>@endforeach</select>
           <input name="obat[{{ $i }}][jumlah]" type="number" min="1" class="input" placeholder="Jml" value="{{ $row['jumlah'] ?? '' }}">
           <input name="obat[{{ $i }}][aturan_pakai]" class="input" placeholder="3 x sehari sesudah makan" value="{{ $row['aturan_pakai'] ?? '' }}">
           <button type="button" class="btn btn-icon btn-bad" data-rx-del aria-label="Hapus"><x-ico n="x"/></button>
@@ -19,7 +19,7 @@
       @endforeach
     </div>
     <template id="rx-template"><div class="rx-row">
-      <select name="obat[__i__][id_obat]" class="input"><option value="">— Pilih obat —</option>@foreach ($obat as $o)<option value="{{ $o->id_obat }}">{{ $o->nama_obat }} (stok {{ $o->stok }})</option>@endforeach</select>
+      <select name="obat[__i__][id_obat]" class="input"><option value="">Pilih obat</option>@foreach ($obat as $o)<option value="{{ $o->id_obat }}">{{ $o->nama_obat }} (stok {{ $o->stok }})</option>@endforeach</select>
       <input name="obat[__i__][jumlah]" type="number" min="1" class="input" placeholder="Jml"><input name="obat[__i__][aturan_pakai]" class="input" placeholder="Aturan pakai">
       <button type="button" class="btn btn-icon btn-bad" data-rx-del aria-label="Hapus"><x-ico n="x"/></button></div></template>
     <button type="button" class="btn btn-sm" id="rx-add"><x-ico n="plus"/> Tambah obat</button>

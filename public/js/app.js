@@ -64,10 +64,44 @@ const ICON = {
   });
 
   /* ---------- Navigasi mobile & dropdown ---------- */
-  $$('[data-burger]').forEach(b => b.addEventListener('click', () => $('.pills')?.classList.toggle('open')));
-  const side = $('.sidebar'), scrim = $('.scrim');
-  $$('[data-side]').forEach(b => b.addEventListener('click', () => { side?.classList.toggle('open'); scrim?.classList.toggle('show'); }));
-  scrim?.addEventListener('click', () => { side.classList.remove('open'); scrim.classList.remove('show'); });
+  /* Hasil audit menu hamburger: aria-expanded, ikon ✕, tutup saat klik tautan / luar menu / Esc /
+     layar melebar, kunci scroll halaman belakang, fokus pindah ke menu. */
+  const IKON_MENU = '<svg class="ico" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg>';
+  const IKON_TUTUP = '<svg class="ico" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>';
+  const pills = $('.pills'), burger = $('[data-burger]');
+  const setPublik = buka => {
+    if (!pills || !burger) return;
+    pills.classList.toggle('open', buka);
+    burger.setAttribute('aria-expanded', buka);
+    burger.setAttribute('aria-label', buka ? 'Tutup menu' : 'Buka menu');
+    burger.innerHTML = buka ? IKON_TUTUP : IKON_MENU;
+    if (buka) pills.querySelector('a')?.focus();
+  };
+  if (pills && burger) {
+    pills.id ||= 'menu-publik';
+    burger.setAttribute('aria-controls', pills.id);
+    burger.setAttribute('aria-expanded', 'false');
+    burger.addEventListener('click', e => { e.stopPropagation(); setPublik(!pills.classList.contains('open')); });
+    pills.addEventListener('click', e => { if (e.target.closest('a')) setPublik(false); });
+    document.addEventListener('click', e => { if (pills.classList.contains('open') && !e.target.closest('.pills')) setPublik(false); });
+  }
+  const side = $('.sidebar'), scrim = $('.scrim'), tombolSide = $$('[data-side]');
+  const setSide = buka => {
+    if (!side) return;
+    side.classList.toggle('open', buka);
+    scrim?.classList.toggle('show', buka);
+    document.body.classList.toggle('kunci-scroll', buka);
+    tombolSide.forEach(b => b.setAttribute('aria-expanded', buka));
+    if (buka) side.querySelector('a')?.focus();
+  };
+  if (side) {
+    side.id ||= 'menu-samping';
+    tombolSide.forEach(b => { b.setAttribute('aria-controls', side.id); b.setAttribute('aria-expanded', 'false'); b.addEventListener('click', () => setSide(!side.classList.contains('open'))); });
+    scrim?.addEventListener('click', () => setSide(false));
+    side.addEventListener('click', e => { if (e.target.closest('a') && innerWidth <= 960) setSide(false); });
+  }
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') { setPublik(false); setSide(false); } });
+  matchMedia('(min-width: 961px)').addEventListener('change', m => { if (m.matches) { setPublik(false); setSide(false); } });
   $$('[data-dropdown]').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); const m = b.nextElementSibling; $$('.menu.open').forEach(x => x !== m && x.classList.remove('open')); m.classList.toggle('open'); }));
   document.addEventListener('click', e => { if (!e.target.closest('.menu')) $$('.menu.open').forEach(m => m.classList.remove('open')); });
 

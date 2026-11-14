@@ -11,8 +11,8 @@ Status: ✅ selesai · 🔄 berjalan · ⏳ menunggu persetujuan · ⬜ belum di
 | 4 | Sprint 3 — Keamanan login lanjutan | Cloudflare Turnstile (fallback soal hitung), OTP opsional petugas | ✅ |
 | 5 | Sprint 4 — Real-time WebSocket | Laravel Reverb + fallback polling | ✅ |
 | 6 | Sprint 5 — Notifikasi WhatsApp | Gateway WA (mis. Fonnte) untuk panggilan antrean & OTP cadangan | ✅ |
-| 7 | Pengujian sistem (UAT) | Uji menyeluruh 7 peran, skenario lapangan, uji beban ringan | ⏳ |
-| 8 | Deploy | VPS + HTTPS, Nginx, Supervisor (queue/reverb), cron, backup DB | ⬜ |
+| 7 | Pengujian sistem (UAT) | Uji menyeluruh 7 peran, skenario lapangan, uji beban ringan | ✅ |
+| 8 | Deploy | VPS + HTTPS, Nginx, Supervisor (queue/reverb), cron, backup DB | ⏳ |
 | 9 | Pemeliharaan | Monitoring log, rotasi kunci, pembaruan dependensi | ⬜ |
 
 ---
@@ -78,10 +78,12 @@ Status: ✅ selesai · 🔄 berjalan · ⏳ menunggu persetujuan · ⬜ belum di
 
 **Hasil verifikasi:** Driver `log` (lokal) dan `fonnte` (diuji dengan respons palsu: header token, nomor dinormalisasi ke 62…, status gagal tercatat). Hanya pasien opt-in (daftar, profil, atau loket); langkah yang dikirim dipilih di Pengaturan (bawaan 5, 7, 9); batas pesan per nomor per hari; OTP dikirim lewat WA bila email gagal dan pasien opt-in, kode tidak disimpan di log. Menu Log WhatsApp + kirim uji untuk Super Admin. Ditemukan & diperbaiki: cache pengaturan menyimpan hasil gabungan sehingga kunci baru menyebabkan error 500 sampai cache kedaluwarsa. 19/19 test (374 assertion) lolos.
 
-## Fase 7 — Pengujian sistem / UAT (⬜)
+## Fase 7 — Pengujian sistem / UAT (✅)
 - Skenario per peran (7 peran), alur 10 langkah, data ganda, OTP, QR, kiosk HMAC.
 - Uji beban ringan (mis. 50 pengguna serentak di layar antrean).
 - Berita acara uji.
+
+**Hasil:** lihat [BERITA-ACARA-UJI.md](BERITA-ACARA-UJI.md). 25 skenario per peran, penjelajahan otomatis 161 halaman, 10 temuan diperbaiki (termasuk menu hamburger, tampilan ponsel, error konsol WebSocket). Ditambahkan atas permintaan: kebijakan privasi (UU PDP, UU ITE, UU Kesehatan, Permenkes 24/2022, acuan ISO/IEC 27001:2022), unduh data saya, layar pembuka & loader, landing page publik, bahasa sehari-hari. Uji beban 50 pengguna: 0 gagal, tetapi lambat di server pengembangan, **wajib diuji ulang di server produksi (Fase 8).**
 
 ## Fase 8 — Deploy (⬜)
 - VPS Ubuntu, Nginx + PHP-FPM 8.4, MySQL 8, HTTPS (Let's Encrypt).

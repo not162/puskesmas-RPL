@@ -20,6 +20,8 @@ class Pengaturan extends Model
         'maps_url' => 'https://maps.google.com/?q=puskesmas',
         'maks_hari_antrean' => '7',
         'kota' => 'Kota Sejahtera',
+        'slogan' => 'Sehat bersama, layanan makin dekat.',
+        'permenkes_tambahan' => '',
         'kepala_puskesmas' => '',
         'nip_kepala' => '',
         'otp_petugas' => '',
