@@ -79,6 +79,9 @@
       }
     } catch (e) {} finally { sibuk = false; }
   };
-  cek(); setInterval(cek, 4000);
+  // Polling 4 dtk hanya saat WebSocket tidak tersambung; selebihnya cek ringan tiap 30 dtk sebagai jaring pengaman
+  let n = 0;
+  window.__segarkanKanal = k => segarkan(k);
+  cek(); setInterval(() => { if (!window.__wsTersambung || ++n % 8 === 0) cek(); }, 4000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) cek(); });
 })();

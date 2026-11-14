@@ -84,7 +84,9 @@ Izin tiap peran tersimpan di `peran_izin` dan bisa diubah di **Peran & Izin**. D
 
 ## Real-time antar peran & tombol alert
 
-- Halaman memantau `/realtime/versi` tiap 4 detik. Saat peran lain mengubah data (pasien daftar/ambil antrean, loket check-in, dokter menerbitkan resep, apoteker menyerahkan obat, pengaduan baru), bagian `data-live` diperbarui **tanpa reload** dan berkedip singkat.
+- **WebSocket (Laravel Reverb):** jalankan `php artisan reverb:start` (port 6001; 8080 dipakai nginx Laragon). Perubahan data dan notifikasi tiba instan. Sinyal hanya berisi nama kanal, data tetap diambil ulang lewat halaman yang dicek hak aksesnya. Kanal: `publik`, privat `staf`, privat `akun.{id}`.
+- **Cadangan otomatis:** bila Reverb tidak berjalan, indikator *Live* berubah kuning dan halaman kembali ke polling di bawah ini.
+- Halaman memantau `/realtime/versi` tiap 4 detik (saat WebSocket tersambung hanya tiap 30 detik sebagai jaring pengaman). Saat peran lain mengubah data (pasien daftar/ambil antrean, loket check-in, dokter menerbitkan resep, apoteker menyerahkan obat, pengaduan baru), bagian `data-live` diperbarui **tanpa reload** dan berkedip singkat.
 - Lonceng notifikasi + toast diperbarui tiap 15 detik.
 - Tombol **alert** (ikon lonceng bergaris) di bilah atas mengaktifkan bunyi + pop-up notifikasi perangkat (izin browser).
 - Admin/Super Admin dapat **Kirim Alert** ke satu atau beberapa peran sekaligus (menu Template Notifikasi / Kirim Alert).

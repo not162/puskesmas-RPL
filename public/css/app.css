@@ -309,3 +309,6 @@ video.scan { width: 100%; max-width: 420px; border-radius: 12px; background: #00
 .app-footer { margin-top: auto; padding: 16px 22px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12.5px; text-align: center; }
 @media (max-width: 960px) { .app-footer { padding-bottom: 90px; } }
 .otp-input { font-size: 26px; letter-spacing: 12px; text-align: center; font-weight: 800; font-family: ui-monospace, Consolas, monospace; }
+
+/* Sprint 4: indikator mode real-time */
+.live-chip[data-mode="poll"] .dot { background: var(--warn); }

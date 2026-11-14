@@ -106,7 +106,10 @@ const ICON = {
         d.baru.forEach(n => { toast(n.tipe || 'info', n.judul, n.pesan, 8000); window.__onNotif && window.__onNotif(n); });
         sejak = d.server_time; render(d);
       }).catch(() => {});
-    poll(); setInterval(poll, 15000);
+    // Bila WebSocket tersambung, notifikasi didorong instan; polling hanya cadangan tiap 60 dtk
+    window.__pollNotif = poll;
+    let tik = 0;
+    poll(); setInterval(() => { if (!window.__wsTersambung || ++tik % 4 === 0) poll(); }, 15000);
   }
 
   ikonTema();

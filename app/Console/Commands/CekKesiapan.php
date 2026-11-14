@@ -98,6 +98,16 @@ class CekKesiapan extends Command
         $gagalJob = DB::table('failed_jobs')->count();
         $gagalJob ? $this->hasil('warn', 'Job gagal', "$gagalJob job gagal — cek php artisan queue:failed") : $this->hasil('ok', 'Job gagal', 'tidak ada');
 
+        // --- Real-time WebSocket (Reverb) ---
+        if (config('broadcasting.default') === 'reverb') {
+            $h = config('broadcasting.connections.reverb.options.host'); $pt = (int) config('broadcasting.connections.reverb.options.port');
+            $sock = @fsockopen($h === 'localhost' ? '127.0.0.1' : $h, $pt, $en, $es, 1.5);
+            if ($sock) { fclose($sock); $this->hasil('ok', 'WebSocket (Reverb)', "berjalan di $h:$pt — pembaruan instan"); }
+            else $this->hasil('warn', 'WebSocket (Reverb)', "tidak berjalan di $h:$pt — halaman memakai polling. Jalankan php artisan reverb:start");
+        } else {
+            $this->hasil('ok', 'Real-time', 'mode polling (BROADCAST_CONNECTION='.config('broadcasting.default').')');
+        }
+
         // --- Penyimpanan ---
         $ok = is_writable(storage_path('logs')) && Storage::disk('local')->put('.cek', '1');
         Storage::disk('local')->delete('.cek');

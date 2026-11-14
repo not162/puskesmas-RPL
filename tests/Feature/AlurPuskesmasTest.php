@@ -223,6 +223,47 @@ class AlurPuskesmasTest extends TestCase
         $this->withSession(['captcha' => 2])->post('/login', ['login' => 'apoteker', 'password' => $this->sandi('apoteker'), 'captcha' => 2])->assertRedirect('/dashboard');
     }
 
+    public function test_websocket_kanal_privat_dan_sinyal_tanpa_data_pribadi(): void
+    {
+        // Otorisasi kanal: staf hanya untuk petugas; akun.{id} hanya pemiliknya
+        config(['broadcasting.default' => 'reverb', 'broadcasting.connections.reverb.key' => 'k', 'broadcasting.connections.reverb.secret' => 's', 'broadcasting.connections.reverb.app_id' => '1']);
+        app(\Illuminate\Broadcasting\BroadcastManager::class)->purge('reverb');
+        require base_path('routes/channels.php'); // daftarkan kanal ke driver reverb
+        $auth = fn ($u, $ch) => $this->actingAs($this->akun($u))->post('/broadcasting/auth', ['socket_id' => '1234.5678', 'channel_name' => $ch]);
+        $auth('loket', 'private-staf')->assertOk();
+        $auth('pasien', 'private-staf')->assertForbidden();
+        $idPasien = $this->akun('pasien')->id_akun;
+        $auth('pasien', 'private-akun.'.$idPasien)->assertOk();
+        $auth('loket', 'private-akun.'.$idPasien)->assertForbidden();
+
+        // Sinyal yang dihasilkan perubahan data: hanya nama kanal
+        config(['broadcasting.default' => 'log']);
+        \App\Support\Siaran::kirimSekarang();
+        \App\Support\Siaran::$terkirim = [];
+        $this->actingAs($this->akun('pasien'))->post('/pasien/antrean', ['id_spesialisasi' => 1, 'tanggal' => today()->toDateString()]);
+        $kirim = collect(\App\Support\Siaran::$terkirim)->groupBy(0)->map(fn ($g) => $g->pluck(1)->flatten()->unique()->values()->all());
+        $this->assertContains('antrian', $kirim['publik']);
+        $this->assertContains('antrian', $kirim['staf']);
+        $this->assertContains('antrian', $kirim['akun.'.$idPasien]);
+        $this->assertContains('notifikasi', $kirim['akun.'.$idPasien]);
+        $this->assertNotContains('pasien', $kirim['publik']);
+        $payload = json_encode((new \App\Events\DataBerubah('publik', ['antrian']))->broadcastWith());
+        $this->assertSame('{"kanal":["antrian"]}', $payload);
+    }
+
+    public function test_siaran_gagal_tidak_mengganggu_request(): void
+    {
+        // Reverb tidak berjalan (port tertutup): aksi tetap berhasil
+        config(['broadcasting.default' => 'reverb', 'broadcasting.connections.reverb.key' => 'k', 'broadcasting.connections.reverb.secret' => 's',
+            'broadcasting.connections.reverb.app_id' => '1', 'broadcasting.connections.reverb.options.host' => '127.0.0.1', 'broadcasting.connections.reverb.options.port' => 1]);
+        app(\Illuminate\Broadcasting\BroadcastManager::class)->purge('reverb');
+        \App\Support\Siaran::$terkirim = [];
+        $mulai = microtime(true);
+        $this->actingAs($this->akun('pasien'))->post('/pasien/antrean', ['id_spesialisasi' => 1, 'tanggal' => today()->toDateString()])->assertRedirect();
+        $this->assertSame([], \App\Support\Siaran::$terkirim); // gagal kirim, diabaikan
+        $this->assertLessThan(5, microtime(true) - $mulai);
+        $this->assertSame(1, Antrian::count());
+    }
     public function test_data_ganda_diarahkan_ke_login_atau_lupa_password(): void
     {
         $dasar = ['nik' => '3171010101990077', 'no_kk' => '3171010101990000', 'nama' => 'Pasien Baru', 'tgl_lahir' => '1990-02-02', 'jenis_kelamin' => 'L',

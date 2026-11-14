@@ -35,7 +35,9 @@
       b.append(c);
     });
   }).catch(() => toast('danger', 'Koneksi terputus', 'Mencoba lagi…', 3000));
-  load(); setInterval(load, 5000);
+  load(); setInterval(() => { if (!window.__wsTersambung) load(); }, 5000);
+  setInterval(load, 30000); // jaring pengaman
+  document.addEventListener('pkm:berubah', e => { if (e.detail.includes('antrian')) load(); });
   document.getElementById('fs').onclick = () => document.documentElement.requestFullscreen?.();
 })();
 </script>

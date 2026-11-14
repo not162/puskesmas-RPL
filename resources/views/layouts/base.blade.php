@@ -42,8 +42,24 @@
     window.__NOTIF_READ = @json(route('notifikasi.baca', '__id__'));
     @endauth
   </script>
-  <script src="{{ asset('js/app.js') }}?v=2"></script>
-  <script src="{{ asset('js/realtime.js') }}?v=2"></script>
+  @php
+    $ws = config('broadcasting.default') === 'reverb' && config('broadcasting.connections.reverb.key') ? [
+      'key' => config('broadcasting.connections.reverb.key'),
+      'host' => config('broadcasting.connections.reverb.options.host') === 'localhost' ? request()->getHost() : config('broadcasting.connections.reverb.options.host'),
+      'port' => (int) config('broadcasting.connections.reverb.options.port'),
+      'tls' => config('broadcasting.connections.reverb.options.scheme') === 'https',
+      'akun' => auth()->id(),
+      'staf' => auth()->check() && ! auth()->user()->hasRole('pasien'),
+    ] : null;
+  @endphp
+  <script>window.__WS = @json($ws);</script>
+  <script src="{{ asset('js/app.js') }}?v=3"></script>
+  @if ($ws)
+  <script src="{{ asset('vendor/pusher.min.js') }}"></script>
+  <script src="{{ asset('vendor/echo.iife.js') }}"></script>
+  <script src="{{ asset('js/websocket.js') }}?v=1"></script>
+  @endif
+  <script src="{{ asset('js/realtime.js') }}?v=3"></script>
   @stack('scripts')
 </body>
 </html>

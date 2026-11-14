@@ -9,8 +9,8 @@ Status: ✅ selesai · 🔄 berjalan · ⏳ menunggu persetujuan · ⬜ belum di
 | 2 | Sprint 1 — Keandalan & mandiri offline | OTP lewat antrean (queue), perintah cek kesiapan sistem, aset tanpa CDN | ✅ |
 | 3 | Sprint 2 — Laporan profesional | Ekspor `.xlsx` asli & PDF dari server | ✅ |
 | 4 | Sprint 3 — Keamanan login lanjutan | Cloudflare Turnstile (fallback soal hitung), OTP opsional petugas | ✅ |
-| 5 | Sprint 4 — Real-time WebSocket | Laravel Reverb + fallback polling | ⏳ |
-| 6 | Sprint 5 — Notifikasi WhatsApp | Gateway WA (mis. Fonnte) untuk panggilan antrean & OTP cadangan | ⬜ |
+| 5 | Sprint 4 — Real-time WebSocket | Laravel Reverb + fallback polling | ✅ |
+| 6 | Sprint 5 — Notifikasi WhatsApp | Gateway WA (mis. Fonnte) untuk panggilan antrean & OTP cadangan | ⏳ |
 | 7 | Pengujian sistem (UAT) | Uji menyeluruh 7 peran, skenario lapangan, uji beban ringan | ⬜ |
 | 8 | Deploy | VPS + HTTPS, Nginx, Supervisor (queue/reverb), cron, backup DB | ⬜ |
 | 9 | Pemeliharaan | Monitoring log, rotasi kunci, pembaruan dependensi | ⬜ |
@@ -64,10 +64,12 @@ Status: ✅ selesai · 🔄 berjalan · ⏳ menunggu persetujuan · ⬜ belum di
 
 **Hasil verifikasi:** Turnstile aktif bila `TURNSTILE_SITE_KEY`/`TURNSTILE_SECRET_KEY` diisi, dipasang di login, daftar, dan lupa password; bila Cloudflare tidak terjangkau sesi beralih ke soal hitung. OTP perangkat baru bisa diwajibkan per peran petugas (Pengaturan); akun petugas ber-email `.test` dikecualikan agar tidak terkunci di luar. Akun terkunci setelah 5x gagal (bisa diatur) selama 15 menit, Super Admin mendapat notifikasi, tercatat di Audit, API mengembalikan 423, dibuka lewat Lupa password atau tombol Buka kunci. 14/14 test (332 assertion) lolos.
 
-## Fase 5 — Sprint 4: Real-time WebSocket (⬜)
+## Fase 5 — Sprint 4: Real-time WebSocket (✅)
 - S4.1 Laravel Reverb + event `DataBerubah` per kanal (antrean, resep, konsultasi, pengaduan).
 - S4.2 Kanal privat per peran; kanal publik hanya data aman (nomor & poli).
 - S4.3 Fallback otomatis ke polling bila WebSocket tidak tersambung.
+
+**Hasil verifikasi:** Reverb di port 6001 (8080 dipakai nginx Laragon). Sinyal hanya berisi nama kanal, tanpa data pribadi; kanal `publik`, privat `staf` (petugas), dan privat `akun.{id}` (pemilik data & notifikasi), otorisasi diuji. Di browser: perubahan dari luar tiba di layar antrean & tabel loket sebelum proses pembuatnya selesai (praktis instan, sebelumnya 4–5 dtk). Reverb dimatikan → indikator beralih ke polling dan data tetap muncul. Pemutus sirkuit 30 dtk mencegah request melambat saat Reverb mati (Windows butuh ~1–2 dtk untuk menolak port tertutup). 16/16 test (346 assertion) lolos.
 
 ## Fase 6 — Sprint 5: Notifikasi WhatsApp (⬜)
 - S5.1 Driver WA (Fonnte/WA Business API) + mode log untuk lokal.

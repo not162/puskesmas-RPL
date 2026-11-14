@@ -95,7 +95,8 @@
       box.append(el);
     });
   }).catch(() => {});
-  load(); setInterval(load, 10000);
+  load(); setInterval(() => { if (!window.__wsTersambung) load(); }, 10000);
+  document.addEventListener('pkm:berubah', e => { if (e.detail.includes('antrian')) load(); });
 })();
 </script>
 @endpush
