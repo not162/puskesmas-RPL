@@ -61,6 +61,8 @@ Route::prefix('v1')->group(function () {
         Route::apiResource('pasien', Api\PasienApiController::class)->middleware('izin:pasien.lihat')->parameters(['pasien' => 'pasien']);
 
         Route::get('laporan/bulanan', [Api\LaporanApiController::class, 'show'])->middleware('izin:laporan.lihat');
+        Route::get('laporan/bulanan/xlsx', [\App\Http\Controllers\LaporanController::class, 'xlsx'])->middleware('izin:laporan.lihat');
+        Route::get('laporan/bulanan/pdf', [\App\Http\Controllers\LaporanController::class, 'pdf'])->middleware('izin:laporan.lihat');
     });
 });
 

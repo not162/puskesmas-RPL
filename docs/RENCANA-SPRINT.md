@@ -7,8 +7,8 @@ Status: ✅ selesai · 🔄 berjalan · ⏳ menunggu persetujuan · ⬜ belum di
 |---|---|---|---|
 | 1 | Analisis kebutuhan | Inventaris kekurangan, prioritas, kriteria selesai (dokumen ini) | ✅ |
 | 2 | Sprint 1 — Keandalan & mandiri offline | OTP lewat antrean (queue), perintah cek kesiapan sistem, aset tanpa CDN | ✅ |
-| 3 | Sprint 2 — Laporan profesional | Ekspor `.xlsx` asli & PDF dari server | ⏳ |
-| 4 | Sprint 3 — Keamanan login lanjutan | Cloudflare Turnstile (fallback soal hitung), OTP opsional petugas | ⬜ |
+| 3 | Sprint 2 — Laporan profesional | Ekspor `.xlsx` asli & PDF dari server | ✅ |
+| 4 | Sprint 3 — Keamanan login lanjutan | Cloudflare Turnstile (fallback soal hitung), OTP opsional petugas | ⏳ |
 | 5 | Sprint 4 — Real-time WebSocket | Laravel Reverb + fallback polling | ⬜ |
 | 6 | Sprint 5 — Notifikasi WhatsApp | Gateway WA (mis. Fonnte) untuk panggilan antrean & OTP cadangan | ⬜ |
 | 7 | Pengujian sistem (UAT) | Uji menyeluruh 7 peran, skenario lapangan, uji beban ringan | ⬜ |
@@ -50,10 +50,12 @@ Status: ✅ selesai · 🔄 berjalan · ⏳ menunggu persetujuan · ⬜ belum di
 
 **Hasil verifikasi:** 9/9 test (264 assertion) lolos; beranda & Swagger memuat 0 sumber dari luar server; tiket unduhan menampilkan QR tanpa internet; `php artisan puskesmas:cek` berjalan di Laragon.
 
-## Fase 3 — Sprint 2: Laporan profesional (⬜)
+## Fase 3 — Sprint 2: Laporan profesional (✅)
 - S2.1 Ekspor `.xlsx` multi-sheet (Ringkasan, Per Poli, Per Dokter, Obat Keluar, Harian) dengan PhpSpreadsheet.
 - S2.2 PDF laporan dari server (Dompdf) dengan kop surat & tanda tangan Kepala Puskesmas.
 - Kriteria: file terbuka di Excel/LibreOffice, angka sama dengan halaman laporan.
+
+**Hasil verifikasi:** `.xlsx` berisi 5 sheet dengan kop, header berwarna, filter, baris TOTAL berupa rumus `=SUM()`, dan grafik batang kunjungan harian (`xl/charts/chart1.xml`). PDF A4 dengan kop surat di tiap halaman, ringkasan, grafik, tabel bertotal, tanda tangan Kepala Puskesmas (nama & NIP diatur di Pengaturan), nomor halaman, dan footer hak cipta. Dibuka di browser; 10/10 test (280 assertion) lolos. Ditemukan & diperbaiki: angka 0 sempat hilang di Excel karena perbandingan longgar `fromArray`.
 
 ## Fase 4 — Sprint 3: Keamanan login lanjutan (⬜)
 - S3.1 Cloudflare Turnstile bila kunci diisi; otomatis kembali ke soal hitung bila offline/kosong.

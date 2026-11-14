@@ -19,7 +19,7 @@ class PengaturanController extends Controller
         $data = $request->validate([
             'nama_puskesmas' => ['required', 'max:80'], 'alamat' => ['required', 'max:200'], 'telepon' => ['nullable', 'max:30'],
             'whatsapp' => ['nullable', 'regex:/^62[0-9]{8,13}$/'], 'email' => ['nullable', 'email'], 'jam_layanan' => ['nullable', 'max:120'],
-            'maps_url' => ['nullable', 'url'], 'maks_hari_antrean' => ['required', 'integer', 'between:0,30'],
+            'maps_url' => ['nullable', 'url'], 'kota' => ['required', 'max:60'], 'kepala_puskesmas' => ['nullable', 'max:100'], 'nip_kepala' => ['nullable', 'regex:/^[0-9 ]{8,24}$/'], 'maks_hari_antrean' => ['required', 'integer', 'between:0,30'],
         ], ['whatsapp.regex' => 'Nomor WhatsApp format 62xxxxxxxxxx.']);
         $data['tolak_nama_ganda'] = $request->boolean('tolak_nama_ganda') ? '1' : '0';
         $data['tolak_kk_ganda'] = $request->boolean('tolak_kk_ganda') ? '1' : '0';

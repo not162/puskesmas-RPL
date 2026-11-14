@@ -151,7 +151,7 @@ Endpoint publik (`/live/antrian`, `/api/v1/public/*`) hanya mengembalikan nomor 
 
 ## Laporan bulanan
 
-**Laporan Bulanan** (super admin): pilih bulan, lalu **Export Excel (CSV)** (UTF-8, pemisah `;`, langsung terbuka di Excel) atau **Cetak / PDF**. Isinya ringkasan, kunjungan per poli (online/loket), layanan per dokter, obat keluar & sisa stok, dan grafik kunjungan harian.
+**Laporan Bulanan** (Super Admin & Admin): pilih bulan, lalu **Excel (.xlsx)** — 5 sheet dengan rumus total dan grafik harian — atau **PDF** dari server dengan kop surat, nomor halaman, dan tanda tangan Kepala Puskesmas (isi nama, NIP, dan kota di menu Pengaturan). CSV dan cetak browser tetap tersedia. Isinya ringkasan, kunjungan per poli (online/loket), layanan per dokter, obat keluar & sisa stok, dan grafik kunjungan harian.
 
 ## Tes
 

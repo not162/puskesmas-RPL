@@ -316,6 +316,21 @@ paths:
       parameters: [{ name: bulan, in: query, schema: { type: string, example: '2026-11' } }]
       responses: { '200': { description: OK } }
 
+  /laporan/bulanan/xlsx:
+    get:
+      tags: [Laporan]
+      summary: Unduh Excel .xlsx (Ringkasan, Per Poli, Per Dokter, Obat Keluar, Harian + grafik)
+      x-izin: laporan.lihat
+      parameters: [{ name: bulan, in: query, schema: { type: string, example: '2026-11' } }]
+      responses: { '200': { description: File xlsx, content: { application/vnd.openxmlformats-officedocument.spreadsheetml.sheet: { schema: { type: string, format: binary } } } } }
+  /laporan/bulanan/pdf:
+    get:
+      tags: [Laporan]
+      summary: Unduh PDF dengan kop surat & tanda tangan Kepala Puskesmas
+      x-izin: laporan.lihat
+      parameters: [{ name: bulan, in: query, schema: { type: string, example: '2026-11' } }, { name: unduh, in: query, schema: { type: string, enum: ['1', '0'] }, description: 0 = tampil di browser }]
+      responses: { '200': { description: File PDF, content: { application/pdf: { schema: { type: string, format: binary } } } } }
+
 components:
   securitySchemes:
     bearerAuth: { type: http, scheme: bearer }

@@ -174,5 +174,7 @@ Route::middleware(['auth', 'aktif'])->group(function () {
         Route::get('laporan', [LaporanController::class, 'index'])->name('laporan');
         Route::get('laporan/cetak', [LaporanController::class, 'cetak'])->name('laporan.cetak');
         Route::get('laporan/export', [LaporanController::class, 'export'])->name('laporan.export');
+        Route::get('laporan/xlsx', [LaporanController::class, 'xlsx'])->name('laporan.xlsx');
+        Route::get('laporan/pdf', [LaporanController::class, 'pdf'])->name('laporan.pdf');
     });
 });

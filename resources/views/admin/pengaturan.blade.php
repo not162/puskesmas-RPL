@@ -12,6 +12,11 @@
       @include('partials.field', ['name' => 'email', 'label' => 'Email', 'type' => 'email', 'value' => $nilai['email']])
       @include('partials.field', ['name' => 'maks_hari_antrean', 'label' => 'Antrean online maks. (hari ke depan)', 'type' => 'number', 'value' => $nilai['maks_hari_antrean']])
     </div>
+    <div class="grid g2">
+      @include('partials.field', ['name' => 'kota', 'label' => 'Kota/Kabupaten (kop & tanda tangan)', 'value' => $nilai['kota'], 'attrs' => 'required'])
+      @include('partials.field', ['name' => 'kepala_puskesmas', 'label' => 'Nama Kepala Puskesmas', 'value' => $nilai['kepala_puskesmas']])
+      @include('partials.field', ['name' => 'nip_kepala', 'label' => 'NIP Kepala Puskesmas', 'value' => $nilai['nip_kepala']])
+    </div>
     @include('partials.field', ['name' => 'jam_layanan', 'label' => 'Jam layanan', 'value' => $nilai['jam_layanan']])
     @include('partials.field', ['name' => 'maps_url', 'label' => 'Tautan Google Maps', 'type' => 'url', 'value' => $nilai['maps_url']])
     <h3 class="mt">Pencegahan pendaftaran ganda</h3>

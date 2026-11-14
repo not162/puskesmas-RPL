@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\EksporLaporan;
 use App\Support\LaporanBulanan;
 use Illuminate\Http\Request;
 
@@ -45,5 +46,25 @@ class LaporanController extends Controller
             foreach ($lap['harian'] as $tgl => $n) $tulis([$tgl, $n]);
             fclose($f);
         }, $nama, ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
+    /** Excel .xlsx multi-sheet dengan rumus total & grafik. */
+    public function xlsx(Request $request)
+    {
+        $lap = (new LaporanBulanan($request->query('bulan')))->semua();
+        return response()->download(EksporLaporan::xlsx($lap), EksporLaporan::namaFile($lap, 'xlsx'), [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ])->deleteFileAfterSend();
+    }
+
+    /** PDF dari server dengan kop surat & tanda tangan. ?unduh=0 untuk pratinjau di browser. */
+    public function pdf(Request $request)
+    {
+        $lap = (new LaporanBulanan($request->query('bulan')))->semua();
+        $cara = $request->query('unduh', '1') === '0' ? 'inline' : 'attachment';
+        return response(EksporLaporan::pdf($lap), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => $cara.'; filename="'.EksporLaporan::namaFile($lap, 'pdf').'"',
+        ]);
     }
 }

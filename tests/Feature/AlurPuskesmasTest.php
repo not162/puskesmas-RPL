@@ -118,6 +118,29 @@ class AlurPuskesmasTest extends TestCase
         $this->assertStringNotContainsString('fonts.googleapis', $this->get('/')->getContent());
     }
 
+    public function test_ekspor_laporan_xlsx_dan_pdf(): void
+    {
+        $admin = $this->akun('superadmin');
+        $xlsx = $this->actingAs($admin)->get('/laporan/xlsx')->assertOk()->assertDownload('laporan-puskesmas-'.now()->format('Y-m').'.xlsx');
+        $path = $xlsx->baseResponse->getFile()->getPathname();
+        $book = \PhpOffice\PhpSpreadsheet\IOFactory::load($path);
+        $this->assertSame(['Ringkasan', 'Per Poli', 'Per Dokter', 'Obat Keluar', 'Harian'], $book->getSheetNames());
+        $this->assertStringContainsString('LAPORAN BULANAN', $book->getSheetByName('Per Poli')->getCell('A3')->getValue());
+
+        $pdf = $this->actingAs($admin)->get('/laporan/pdf')->assertOk()->assertHeader('Content-Type', 'application/pdf');
+        $this->assertStringStartsWith('%PDF', $pdf->getContent());
+        $this->actingAs($admin)->get('/laporan/pdf?unduh=0')->assertHeader('Content-Disposition', 'inline; filename="laporan-puskesmas-'.now()->format('Y-m').'.pdf"');
+
+        // Admin boleh, apoteker tidak
+        $this->actingAs($this->akun('admin'))->get('/laporan/xlsx')->assertOk();
+        $this->actingAs($this->akun('apoteker'))->get('/laporan/pdf')->assertRedirect('/dashboard');
+
+        // API dengan token
+        $this->app['auth']->forgetGuards();
+        $token = $this->postJson('/api/v1/auth/login', ['login' => 'superadmin', 'password' => $this->sandi('super_admin')])->json('token');
+        $this->get('/api/v1/laporan/bulanan/pdf', ['Authorization' => "Bearer $token"])->assertOk()->assertHeader('Content-Type', 'application/pdf');
+    }
+
     public function test_data_ganda_diarahkan_ke_login_atau_lupa_password(): void
     {
         $dasar = ['nik' => '3171010101990077', 'no_kk' => '3171010101990000', 'nama' => 'Pasien Baru', 'tgl_lahir' => '1990-02-02', 'jenis_kelamin' => 'L',
