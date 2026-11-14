@@ -48,11 +48,9 @@ Kata sandi awal **berbeda untuk tiap peran** dan dibaca seeder dari `.env` (`SEE
 
 ## Kode OTP lewat email (SMTP)
 
-Kode 6 digit dikirim ke email pengguna (mis. `@gmail.com`) untuk:
+Saat ini kode OTP 6 digit **hanya dipakai untuk lupa password** (dikirim ke email akun). Daftar akun langsung jadi tanpa kode, dan masuk dari perangkat baru tidak meminta kode.
 
-1. **Registrasi** — akun baru dibuat setelah kode benar (email terverifikasi).
-2. **Lupa password** — kode + password baru di `/lupa-password`.
-3. **Login pasien dari perangkat baru** — setelah lolos, perangkat bisa dipercaya 30 hari.
+Fitur OTP saat daftar dan saat masuk dari perangkat baru sudah tersedia tetapi dimatikan. Aktifkan lagi lewat `.env`: `OTP_REGISTRASI=true` dan/atau `OTP_LOGIN_PERANGKAT=true`, lalu `php artisan config:clear`.
 
 Kode berlaku 10 menit, maksimal 5 kali salah, kirim ulang tiap 60 detik, dan disimpan sebagai HMAC (bukan teks asli).
 

@@ -68,6 +68,11 @@ class AuthApiController extends Controller
         $payload['email'] = strtolower($payload['email']);
         $payload['password'] = Hash::make($data['password']);
         $payload['wa_opt_in'] = $request->boolean('wa_opt_in');
+        if (! config('otp.registrasi')) {
+            $pasien = AuthController::buatPasienDariPayload($payload);
+            if (! $pasien) return response()->json(['message' => 'Data sudah terdaftar. Silakan login atau gunakan lupa password.'], 409);
+            return $this->token($pasien->akun->load('peran'), 'api', 201);
+        }
         $otp = Otp::kirim($payload['email'], 'registrasi', $payload);
         return response()->json(['message' => 'Kode OTP dikirim ke email.', 'otp_ref' => $otp->ref, 'email' => $otp->emailSamaran()], 202);
     }

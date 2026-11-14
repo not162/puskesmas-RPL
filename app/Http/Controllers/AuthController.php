@@ -111,6 +111,7 @@ class AuthController extends Controller
 
     public static function wajibOtpPerangkat(Akun $a): bool
     {
+        if (! config('otp.login_perangkat')) return false; // OTP hanya untuk lupa password
         if (! $a->email || str_ends_with($a->email, '.test') && ! $a->hasRole(Peran::PASIEN)) return false;
         $peran = array_filter(explode(',', (string) Pengaturan::nilai('otp_petugas')));
         return $a->hasRole(Peran::PASIEN) || in_array($a->role(), $peran, true);
@@ -216,6 +217,19 @@ class AuthController extends Controller
         if ($request->hasFile('foto_ktp')) {
             $payload['foto_ktp'] = $request->file('foto_ktp')->store('ktp/sementara', 'local');
         }
+        // 2a) Tanpa OTP (bawaan): akun langsung dibuat
+        if (! config('otp.registrasi')) {
+            $pasien = self::buatPasienDariPayload($payload);
+            if (! $pasien) {
+                return redirect()->route('login')->with('alert', ['tipe' => 'warning', 'judul' => 'Data sudah terdaftar', 'pesan' => 'Silakan masuk atau gunakan Lupa password.']);
+            }
+            Auth::login($pasien->akun);
+            $request->session()->regenerate();
+            LogLogin::create(['id_akun' => $pasien->id_akun, 'email_dicoba' => $pasien->akun->username, 'waktu' => now(), 'hasil' => 'berhasil', 'ip' => $request->ip()]);
+            return redirect()->route('dashboard')->with('alert', ['tipe' => 'success', 'judul' => 'Registrasi berhasil', 'pesan' => "Selamat datang! Nomor rekam medis Anda {$pasien->no_rm}. Lanjutkan ke Daftar Berobat."]);
+        }
+
+        // 2b) Dengan OTP (bila OTP_REGISTRASI=true)
         $otp = Otp::kirim($data['email'], 'registrasi', $payload);
         session(['otp_registrasi' => $otp->id]);
 

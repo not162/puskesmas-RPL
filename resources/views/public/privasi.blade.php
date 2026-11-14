@@ -26,7 +26,7 @@
   <div class="table-wrap"><table>
     <tr><th>Jenis data</th><th>Contoh</th><th>Untuk apa</th></tr>
     <tr><td>Identitas</td><td>NIK, Nomor KK, nama, tanggal lahir, jenis kelamin, alamat</td><td>Memastikan Anda pasien yang benar dan mencegah data ganda</td></tr>
-    <tr><td>Kontak</td><td>Email, nomor HP/WhatsApp</td><td>Mengirim kode OTP dan pemberitahuan antrean (WhatsApp hanya jika Anda setuju)</td></tr>
+    <tr><td>Kontak</td><td>Email, nomor HP/WhatsApp</td><td>Mengirim kode OTP saat Anda lupa kata sandi dan pemberitahuan antrean (WhatsApp hanya jika Anda setuju)</td></tr>
     <tr><td>Kepesertaan</td><td>Nomor BPJS (jika diisi), foto KTP (jika diunggah)</td><td>Administrasi pelayanan</td></tr>
     <tr><td>Kesehatan</td><td>Keluhan, diagnosis, resep, riwayat kunjungan</td><td>Pemeriksaan dan pengobatan oleh dokter dan apoteker</td></tr>
     <tr><td>Catatan keamanan</td><td>Waktu masuk, alamat IP, perangkat tepercaya</td><td>Mencegah penyalahgunaan akun</td></tr>
@@ -61,7 +61,7 @@
   <div class="table-wrap"><table>
     <tr><th>Yang kami lakukan</th><th>Penjelasan sederhana</th><th>Kontrol ISO 27001:2022</th></tr>
     <tr><td>Hak akses per peran</td><td>Setiap petugas hanya membuka menu sesuai tugasnya</td><td class="mono">5.15, 8.2, 8.3</td></tr>
-    <tr><td>Masuk yang aman</td><td>Kode OTP ke email, akun dikunci sementara jika salah kata sandi berulang kali, verifikasi anti-robot</td><td class="mono">5.17, 8.5</td></tr>
+    <tr><td>Masuk yang aman</td><td>Kode OTP ke email untuk mengatur ulang kata sandi, akun dikunci sementara jika salah kata sandi berulang kali, verifikasi anti-robot</td><td class="mono">5.17, 8.5</td></tr>
     <tr><td>Kata sandi tersimpan acak</td><td>Kata sandi disimpan dalam bentuk acak (hash), petugas pun tidak bisa membacanya</td><td class="mono">8.24</td></tr>
     <tr><td>Tiket anti-palsu</td><td>QR tiket diberi tanda tangan digital; tiket yang diubah otomatis ditolak</td><td class="mono">8.24</td></tr>
     <tr><td>Data disamarkan</td><td>Layar umum hanya menampilkan nomor antrean; NIK disamarkan di layar</td><td class="mono">8.11, 8.12</td></tr>

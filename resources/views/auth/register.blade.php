@@ -4,7 +4,7 @@
 <div class="auth-main">
   <div class="card auth-card wide">
     <h1 style="font-size:24px;font-weight:800">Daftar Pasien</h1>
-    <p class="muted">Isi data sesuai KTP. Satu NIK, Nomor KK, nama, email, dan username hanya bisa didaftarkan sekali. Jika data Anda sudah terdaftar, Anda akan diarahkan ke halaman masuk. Setelah formulir dikirim, kode OTP dikirim ke email Anda.</p>
+    <p class="muted">Isi data sesuai KTP. Satu NIK, Nomor KK, nama, email, dan username hanya bisa didaftarkan sekali. Jika data Anda sudah terdaftar, Anda akan diarahkan ke halaman masuk. Setelah formulir dikirim, akun langsung bisa dipakai.</p>
     <div class="alert alert-warn" id="ganda-box" hidden><x-ico n="alert"/><div><b><span id="ganda-label"></span> sudah terdaftar.</b> Silakan <a href="{{ route('login') }}">masuk</a> atau <a href="{{ route('password.request') }}">gunakan Lupa password</a>.</div></div>
     <form method="POST" action="{{ route('register') }}" enctype="multipart/form-data" novalidate>
       @csrf
@@ -22,7 +22,7 @@
       @include('partials.field', ['name' => 'username', 'label' => 'Username', 'hint' => '4–30 karakter: huruf kecil, angka, titik (.) dan garis bawah (_)', 'attrs' => 'required pattern="[a-z0-9._]{4,30}" autocomplete="username" autocapitalize="none" spellcheck="false" data-cek="username"'])
       <div class="grid g2">
         @include('partials.field', ['name' => 'no_tlp', 'label' => 'No. HP / WhatsApp', 'type' => 'tel', 'attrs' => 'required placeholder="08xxxxxxxxxx"'])
-        @include('partials.field', ['name' => 'email', 'label' => 'Email', 'type' => 'email', 'hint' => 'Kode OTP dikirim ke email ini (contoh: nama@gmail.com)', 'attrs' => 'required autocomplete="email" data-cek="email"'])
+        @include('partials.field', ['name' => 'email', 'label' => 'Email', 'type' => 'email', 'hint' => 'Dipakai untuk menerima kode OTP bila Anda lupa password (contoh: nama@gmail.com)', 'attrs' => 'required autocomplete="email" data-cek="email"'])
       </div>
       @include('partials.field', ['name' => 'no_bpjs', 'label' => 'No. BPJS (opsional)', 'attrs' => 'inputmode="numeric" maxlength="13" placeholder="13 digit"'])
       <div class="grid g2">
@@ -37,7 +37,7 @@
       <div class="field"><label class="check"><input type="checkbox" name="setuju" value="1" @checked(old('setuju'))> <span>Saya setuju data saya diproses sesuai <a href="{{ route('privasi') }}" target="_blank">Kebijakan Privasi</a> (wajib)</span></label>
         @error('setuju')<div class="err-msg">{{ $message }}</div>@enderror</div>
       @include('partials.captcha')
-      <button class="btn btn-primary btn-block btn-lg" type="submit">Daftar & kirim kode OTP</button>
+      <button class="btn btn-primary btn-block btn-lg" type="submit">Daftar sekarang</button>
     </form>
     <p class="muted mt mb0" style="text-align:center">Sudah punya akun? <a href="{{ route('login') }}">Masuk</a> · <a href="{{ route('password.request') }}">Lupa password?</a></p>
   </div>
