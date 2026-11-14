@@ -132,6 +132,15 @@ class UatJelajahTest extends TestCase
         $this->assertTrue(\App\Models\AuditLog::where('aksi', 'unduh_data')->exists());
     }
 
+    public function test_header_keamanan(): void
+    {
+        $res = $this->get('/');
+        $res->assertHeader('X-Content-Type-Options', 'nosniff')->assertHeader('X-Frame-Options', 'SAMEORIGIN')
+            ->assertHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+        $this->assertStringContainsString('camera=(self)', $res->headers->get('Permissions-Policy'));
+        $this->actingAs($this->akun('pasien'))->get('/dashboard')->assertHeader('Cache-Control', 'no-store, private');
+    }
+
     public function test_halaman_publik_tanpa_login(): void
     {
         foreach (['/', '/layar-antrean', '/jadwal', '/alur-layanan', '/informasi', '/kebijakan-privasi', '/login', '/pasien/masuk', '/register', '/lupa-password', '/api/docs'] as $u) {

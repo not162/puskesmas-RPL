@@ -81,14 +81,23 @@ Perintah: `php tests/beban.php http://localhost:8000 50 2`
 
 **Kesimpulan:** tidak ada permintaan yang gagal, tetapi waktu tunggu tinggi. Penyebabnya server pengembangan `php artisan serve` hanya melayani satu permintaan sekaligus dan PHP di Laragon tidak memakai OPcache (setiap permintaan ±0,6 dtk memuat ulang aplikasi). Pengujian ulang dengan `php artisan optimize` tidak memperbaiki angka, menandakan hambatan ada di server, bukan basis data. Data layar antrean publik kini disimpan sementara 5 detik (dibuang otomatis saat antrean berubah) untuk mengurangi kueri saat banyak layar terbuka.
 
-➡️ **Wajib diuji ulang di Fase 8** pada server produksi (Nginx + PHP-FPM beberapa worker + OPcache + `php artisan optimize`).
+**Uji ulang Fase 8 (susunan mirip produksi):** Nginx 1.29 + 6 proses PHP + OPcache + `php artisan optimize`, 50 pengguna serentak, 400 permintaan:
+
+| Halaman | Gagal | p50 | p95 |
+|---|---|---|---|
+| Data antrean langsung | 0 | 0,55 dtk | 0,71 dtk |
+| Beranda | 0 | 1,03 dtk | 1,58 dtk |
+| Layar antrean | 0 | 0,57 dtk | 0,80 dtk |
+| Jadwal dokter | 0 | 0,83 dtk | 1,20 dtk |
+
+Kecepatan naik dari 2,4 menjadi **43,7 permintaan/detik** (±18×). ✅ Lulus. Tetap diulang di server sungguhan saat go-live (lihat docs/DEPLOY.md).
 
 ## 5. Catatan yang belum dapat diuji di lingkungan ini
 
 1. Pengiriman email OTP ke Gmail sungguhan (SMTP belum diisi; diuji dengan email palsu).
 2. Pengiriman WhatsApp lewat Fonnte sungguhan (token belum ada; diuji dengan respons palsu).
 3. Cloudflare Turnstile sungguhan (kunci belum ada; diuji dengan respons palsu dan saat offline).
-4. Uji beban di server produksi (lihat bagian 4).
+4. Uji beban di server sungguhan (susunan mirip produksi sudah diuji lokal, lihat bagian 4).
 5. Uji di perangkat fisik (Android/iPhone); yang diuji adalah emulasi ukuran 375×812 di browser.
 6. Nomor "Permenkes 2025" untuk Kebijakan Privasi belum diisi (menu Pengaturan → Permenkes tambahan).
 

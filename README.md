@@ -200,6 +200,10 @@ Di Laragon tanpa worker, pakai `OTP_PENGIRIMAN=langsung`. Semua aset (font, Swag
 
 Rencana perbaikan bertahap ada di [docs/RENCANA-SPRINT.md](docs/RENCANA-SPRINT.md).
 
+## Deploy ke server
+
+Panduan lengkap VPS & cPanel: [docs/DEPLOY.md](docs/DEPLOY.md). Berkas konfigurasi: folder `deploy/`. Cadangan basis data: `php artisan puskesmas:cadangkan` (otomatis setiap hari pukul 02.00 lewat penjadwal).
+
 ## Privasi & pengujian
 
 - Kebijakan privasi di `/kebijakan-privasi` mengacu UU PDP, UU ITE, UU Kesehatan, Permenkes 24/2022, dan ISO/IEC 27001:2022 (bukan klaim sertifikasi). Nomor Permenkes tambahan diisi di Pengaturan.

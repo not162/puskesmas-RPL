@@ -12,8 +12,8 @@ Status: ✅ selesai · 🔄 berjalan · ⏳ menunggu persetujuan · ⬜ belum di
 | 5 | Sprint 4 — Real-time WebSocket | Laravel Reverb + fallback polling | ✅ |
 | 6 | Sprint 5 — Notifikasi WhatsApp | Gateway WA (mis. Fonnte) untuk panggilan antrean & OTP cadangan | ✅ |
 | 7 | Pengujian sistem (UAT) | Uji menyeluruh 7 peran, skenario lapangan, uji beban ringan | ✅ |
-| 8 | Deploy | VPS + HTTPS, Nginx, Supervisor (queue/reverb), cron, backup DB | ⏳ |
-| 9 | Pemeliharaan | Monitoring log, rotasi kunci, pembaruan dependensi | ⬜ |
+| 8 | Deploy | VPS + HTTPS, Nginx, Supervisor (queue/reverb), cron, backup DB | ✅ paket siap & teruji; pemasangan di server menunggu akses |
+| 9 | Pemeliharaan | Monitoring log, rotasi kunci, pembaruan dependensi | ⏳ |
 
 ---
 
@@ -85,10 +85,12 @@ Status: ✅ selesai · 🔄 berjalan · ⏳ menunggu persetujuan · ⬜ belum di
 
 **Hasil:** lihat [BERITA-ACARA-UJI.md](BERITA-ACARA-UJI.md). 25 skenario per peran, penjelajahan otomatis 161 halaman, 10 temuan diperbaiki (termasuk menu hamburger, tampilan ponsel, error konsol WebSocket). Ditambahkan atas permintaan: kebijakan privasi (UU PDP, UU ITE, UU Kesehatan, Permenkes 24/2022, acuan ISO/IEC 27001:2022), unduh data saya, layar pembuka & loader, landing page publik, bahasa sehari-hari. Uji beban 50 pengguna: 0 gagal, tetapi lambat di server pengembangan, **wajib diuji ulang di server produksi (Fase 8).**
 
-## Fase 8 — Deploy (⬜)
+## Fase 8 — Deploy (✅ paket siap)
 - VPS Ubuntu, Nginx + PHP-FPM 8.4, MySQL 8, HTTPS (Let's Encrypt).
 - Supervisor: `queue:work` (+ `reverb:start` bila Sprint 4), cron `schedule:run`.
 - Backup database harian, `.env` produksi, `APP_DEBUG=false`.
+
+**Hasil:** folder `deploy/` (Nginx, PHP + OPcache, PHP-FPM, Supervisor antrean & Reverb, cron, `deploy.sh`, `.env` produksi, `.htaccess` cPanel) + [DEPLOY.md](DEPLOY.md) untuk VPS & cPanel + daftar periksa go-live. Ditambahkan: `puskesmas:cadangkan` (cadangan harian gzip, retensi 14 hari; **pemulihan diuji**), jadwal tugas, header keamanan, proxy tepercaya. Konfigurasi Nginx lulus `nginx -t`; uji beban susunan mirip produksi: 43,7 permintaan/detik, 0 gagal, p50 ≤1 dtk untuk 50 pengguna. Pemasangan di server sungguhan dilakukan pemilik server mengikuti DEPLOY.md.
 
 ## Fase 9 — Pemeliharaan (⬜)
 - Pantau `storage/logs`, rotasi `HMAC_SECRET`/`KIOSK_HMAC_SECRET` berkala, `composer audit` bulanan.

@@ -1,0 +1,19 @@
+# Hanya untuk HOSTING BIASA (cPanel) bila folder aplikasi TIDAK bisa diarahkan ke /public.
+# Letakkan aplikasi di /home/USER/puskesmas, lalu salin isi folder public/ ke public_html
+# dan pakai berkas ini sebagai public_html/.htaccess (cara yang lebih aman: arahkan
+# Document Root domain ke /home/USER/puskesmas/public lewat menu "Domains" di cPanel).
+<IfModule mod_rewrite.c>
+    Options -MultiViews -Indexes
+    RewriteEngine On
+    RewriteCond %{HTTPS} !=on
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [L]
+</IfModule>
+<FilesMatch "\.(env|log|sql|gz|md)$">
+    Require all denied
+</FilesMatch>
+Header always set X-Content-Type-Options "nosniff"

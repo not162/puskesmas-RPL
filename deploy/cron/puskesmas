@@ -1,0 +1,4 @@
+# /etc/cron.d/puskesmas — penjadwal Laravel (cadangan harian, pembersihan OTP, dll.)
+SHELL=/bin/bash
+* * * * * www-data cd /var/www/puskesmas && php artisan schedule:run >> /dev/null 2>&1
+
