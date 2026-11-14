@@ -56,7 +56,7 @@ class PraktikController extends Controller
         return view('dokter.periksa', [
             'a' => $antrian->load('pasien', 'konsultasi', 'spesialisasi'),
             'riwayat' => Konsultasi::with('dokter')->where('id_pasien', $antrian->id_pasien)->whereNotNull('diagnosis')->latest('tanggal')->limit(5)->get(),
-            'obat' => Obat::where('stok', '>', 0)->orderBy('nama_obat')->get(),
+            'obat' => Obat::tersedia()->orderByRaw('kode is null')->orderBy('kategori')->orderBy('kode')->get(),
         ]);
     }
 
@@ -95,6 +95,7 @@ class PraktikController extends Controller
             return $r;
         });
 
+        \App\Support\RekomendasiObat::lupakanGraf(); // graf belajar dari resep baru
         if ($resep) {
             Notifier::pasien($antrian->pasien, 8, [], route('pasien.resep'), 'success');
             Notifier::peran('apoteker', 'Resep baru', "Resep untuk antrian {$antrian->nomor} dari {$d->nama}.", route('farmasi.resep.show', $resep));
@@ -136,6 +137,19 @@ class PraktikController extends Controller
         $konsultasi->update($data + ['id_dokter' => $d->id_dokter, 'status' => 'ditanggapi']);
         Notifier::pasien($konsultasi->pasien, 4, ['dokter' => $d->nama], route('pasien.konsultasi.show', $konsultasi), 'success');
         return $this->kembali('success', 'Tanggapan terkirim', 'Pasien telah diberi notifikasi.', route('dokter.konsultasi'));
+    }
+
+    /** Saran obat hibrida (graf + konten + kolaboratif) untuk resep yang sedang ditulis. */
+    public function rekomendasiObat(Request $request)
+    {
+        $d = $this->dokter($request);
+        $dipilih = array_filter(array_map('intval', (array) $request->query('dipilih', [])));
+        $teks = mb_substr((string) $request->query('teks', ''), 0, 2000);
+        return response()->json([
+            'poli' => $d->spesialisasi->poli,
+            'bobot' => \App\Support\RekomendasiObat::BOBOT,
+            'saran' => \App\Support\RekomendasiObat::untuk($dipilih, $teks, $d->spesialisasi->nama, $d->id_dokter),
+        ]);
     }
 
     public function riwayatResep(Request $request)

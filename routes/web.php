@@ -125,6 +125,7 @@ Route::middleware(['auth', 'aktif'])->group(function () {
             Route::get('konsultasi/{konsultasi}', 'showKonsultasi')->name('konsultasi.show');
             Route::post('konsultasi/{konsultasi}/tanggapi', 'tanggapi')->name('konsultasi.tanggapi');
             Route::get('resep', 'riwayatResep')->name('resep');
+            Route::get('rekomendasi-obat', 'rekomendasiObat')->middleware(['izin:resep.buat', 'throttle:120,1,rekomendasi'])->name('rekomendasi');
         });
         Route::controller(RiwayatController::class)->group(function () {
             Route::get('pemeriksaan', 'pemeriksaan')->name('pemeriksaan');
@@ -143,6 +144,7 @@ Route::middleware(['auth', 'aktif'])->group(function () {
         Route::get('riwayat-penyerahan', Farmasi\PenyerahanController::class)->name('penyerahan');
     });
     Route::resource('obat', Farmasi\ObatController::class)->except('show')->middleware('izin:obat.kelola');
+    Route::get('formularium', [Farmasi\ObatController::class, 'formularium'])->middleware('izin:obat.lihat')->name('formularium');
 
     /* ----- Super Admin & Admin ----- */
     Route::prefix('admin')->name('admin.')->group(function () {

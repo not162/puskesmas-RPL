@@ -116,10 +116,13 @@ class DatabaseSeeder extends Seeder
             'alamat' => 'Jl. Melati No. 5', 'no_tlp' => '081234567890',
         ]);
 
-        foreach ([['Paracetamol 500 mg', 'tablet', 500], ['Amoxicillin 500 mg', 'kapsul', 300], ['Asam Folat 400 mcg', 'tablet', 400],
-                  ['Tablet Tambah Darah (Fe)', 'tablet', 600], ['Antasida DOEN', 'tablet', 250], ['CTM 4 mg', 'tablet', 200],
-                  ['Vitamin B6', 'tablet', 300], ['Oralit', 'sachet', 150], ['Kalsium Laktat', 'tablet', 350], ['Ibuprofen 400 mg', 'tablet', 8]] as [$n, $s, $st]) {
-            Obat::updateOrCreate(['nama_obat' => $n], ['satuan' => $s, 'stok' => $st]);
+        // Formularium OBT-001 s.d. OBT-020 (config/formularium.php)
+        foreach (config('formularium.obat') as $kode => [$nama, $bentuk, $satuan, $kat, $zat, $gol, $poli, $hamil, $guna, $indikasi, $jml, $aturan, $catatan, $stok]) {
+            Obat::updateOrCreate(['kode' => $kode], [
+                'nama_obat' => $nama, 'bentuk' => $bentuk, 'satuan' => $satuan, 'kategori' => $kat, 'zat_aktif' => $zat, 'golongan' => $gol,
+                'poli' => $poli, 'keamanan_hamil' => $hamil, 'kegunaan' => $guna, 'indikasi' => $indikasi, 'jumlah_bawaan' => $jml,
+                'aturan_bawaan' => $aturan, 'catatan' => $catatan, 'stok' => $stok, 'stok_minimum' => 20, 'aktif' => true,
+            ]);
         }
 
         foreach (config('alur.langkah') as $no => $l) {
@@ -131,6 +134,9 @@ class DatabaseSeeder extends Seeder
 
         Pengumuman::updateOrCreate(['judul' => 'Antrean online kini tersedia'], ['isi' => 'Ambil nomor antrean dari rumah, tunjukkan QR tiket di loket, dan pantau layar antrean secara langsung.', 'kategori' => 'pengumuman', 'tanggal' => now()->toDateString()]);
         Pengumuman::updateOrCreate(['judul' => 'Kelas ibu hamil'], ['isi' => 'Setiap Sabtu pukul 09.00 di aula Puskesmas bersama bidan dan dokter kandungan.', 'kategori' => 'agenda', 'tanggal' => now()->addDays(3)->toDateString()]);
+        foreach (config('formularium.tips') as [$judul, $isi]) {
+            Pengumuman::updateOrCreate(['judul' => $judul], ['isi' => $isi, 'kategori' => 'edukasi', 'tanggal' => now()->toDateString()]);
+        }
         Pengumuman::updateOrCreate(['judul' => 'Imunisasi dasar lengkap'], ['isi' => 'Bawa buku KIA saat jadwal imunisasi anak di Poli KIA.', 'kategori' => 'edukasi', 'tanggal' => now()->toDateString()]);
     }
 }

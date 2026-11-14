@@ -144,3 +144,23 @@ body.kunci-scroll { overflow: hidden; }
 
 /* Perbaikan: jarak antar-kartu bertumpuk tidak berlaku di dalam grid (kartu jadi tidak sejajar) */
 .grid > .card + .card { margin-top: 0; }
+
+/* ===== Formularium & saran obat ===== */
+.periksa-grid { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
+@media (max-width: 1000px) { .periksa-grid { grid-template-columns: 1fr; } }
+.saran-obat { margin: 12px 0 14px; padding: 14px; border-radius: 14px; border: 1px dashed color-mix(in srgb, var(--brand) 45%, var(--line)); background: color-mix(in srgb, var(--brand) 5%, var(--panel)); }
+.saran-ket { font-size: 12px; }
+.saran-isi { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; margin-top: 10px; }
+.saran-kartu { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px; font-size: 13.5px; }
+.saran-kartu.ada-peringatan { border-color: color-mix(in srgb, var(--warn) 45%, var(--line)); }
+.saran-atas { display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; }
+.saran-kartu ul { margin: 6px 0; padding-left: 16px; color: var(--muted); }
+.saran-kartu .badge { white-space: normal; margin-top: 2px; }
+.saran-skor { height: 5px; border-radius: 99px; background: var(--panel-2); margin-top: 8px; overflow: hidden; }
+.saran-skor i { display: block; height: 100%; background: linear-gradient(90deg, var(--brand), var(--brand-2)); }
+.rx-blok { margin-bottom: 10px; }
+.rx-blok .rx-row { margin-bottom: 4px; }
+.rx-info { font-size: 12.5px; padding-left: 2px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.sub-judul { margin: 18px 0 8px; font-size: 14px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.obat-kartu { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; background: var(--panel-2); }
+tr.nonaktif td { opacity: .55; }

@@ -204,6 +204,17 @@ Rencana perbaikan bertahap ada di [docs/RENCANA-SPRINT.md](docs/RENCANA-SPRINT.m
 
 Panduan lengkap VPS & cPanel: [docs/DEPLOY.md](docs/DEPLOY.md). Berkas konfigurasi: folder `deploy/`. Cadangan basis data: `php artisan puskesmas:cadangkan` (otomatis setiap hari pukul 02.00 lewat penjadwal).
 
+## Formularium obat & saran resep
+
+- **20 obat formularium** (OBT-001 s.d. OBT-020) per kategori: demam & nyeri, batuk/sesak/alergi, lambung & pencernaan, penyakit kronis, antibiotik, vitamin, dan suplemen ibu hamil (KIA/ANC). Data awal: `config/formularium.php`.
+- **CRUD real-time + RBAC:** Apoteker & Super Admin mengelola di **Obat & Stok** (izin `obat.kelola`); Dokter & Apoteker melihat **Formularium** (izin `obat.lihat`). Setiap perubahan langsung terlihat di pemilih obat dokter.
+- **Saran obat di form resep dokter** (`App\Support\RekomendasiObat`), hibrida:
+  1. **Graf** "sering diresepkan bersama" (seperti *frequently bought together*): bobot sisi = pasangan awal formularium + jumlah resep nyata yang memuat kedua obat; belajar otomatis dari setiap resep baru.
+  2. **Berbasis konten:** kecocokan kata kunci indikasi dengan keluhan & diagnosis, kesesuaian poli.
+  3. **Kolaboratif:** obat pada kasus dengan diagnosis serupa + kebiasaan peresepan dokter.
+  Skor = 45% graf + 35% konten + 20% kolaboratif, dengan penyaring keamanan (stok habis disingkirkan, obat yang dihindari saat hamil diturunkan di Poli Kandungan, obat sejenis tidak disarankan ganda, antibiotik diberi peringatan). Saran hanya bantuan; keputusan tetap pada dokter.
+- Pemilih obat berkelompok per kategori dengan placeholder dosis & aturan pakai bawaan; pasien melihat catatan cara minum di halaman resep. Tips hidup sehat tampil di halaman Informasi.
+
 ## Pemeliharaan
 
 Pemantauan otomatis tiap jam (`php artisan puskesmas:pantau`), halaman **Kesehatan Sistem** untuk Super Admin, pemeriksaan celah pustaka mingguan, dan rotasi kunci (`php artisan puskesmas:rotasi-kunci --hmac`). SOP lengkap: [docs/PEMELIHARAAN.md](docs/PEMELIHARAAN.md).

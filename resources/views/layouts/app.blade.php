@@ -13,11 +13,11 @@
     $u->isDokter() => [
       ['dokter.antrian', 'Antrean Poli', 'ticket'], ['dokter.pemeriksaan', 'Pemeriksaan', 'steth'], ['dokter.resep', 'Resep', 'pill'],
       ['dokter.riwayat', 'Riwayat Pasien', 'users'], ['dokter.jadwal', 'Jadwal Saya', 'calendar'], ['notifikasi', 'Notifikasi', 'bell'],
-      ['dokter.konsultasi', 'Konsultasi Online', 'chat'], ['dashboard', 'Dasbor', 'home'],
+      ['dokter.konsultasi', 'Konsultasi Online', 'chat'], ['formularium', 'Formularium Obat', 'box'], ['dashboard', 'Dasbor', 'home'],
     ],
     $r === 'apoteker' => [
       ['farmasi.resep.index', 'Resep Masuk', 'pill', ['status' => 'baru']], ['farmasi.resep.index', 'Proses & Serahkan', 'check', ['status' => 'diproses']],
-      ['obat.index', 'Obat & Stok', 'box'], ['farmasi.penyerahan', 'Riwayat Penyerahan', 'log'], ['notifikasi', 'Notifikasi', 'bell'], ['dashboard', 'Dasbor', 'home'],
+      ['obat.index', 'Obat & Stok', 'box'], ['formularium', 'Formularium', 'pill'], ['farmasi.penyerahan', 'Riwayat Penyerahan', 'log'], ['notifikasi', 'Notifikasi', 'bell'], ['dashboard', 'Dasbor', 'home'],
     ],
     $r === 'loket' => [
       ['loket.pasien.index', 'Cari Pasien', 'search'], ['loket.pasien.create', 'Pasien Baru', 'plus'], ['loket.pendaftaran', 'Pendaftaran', 'list'],

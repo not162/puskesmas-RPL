@@ -113,7 +113,7 @@ const ICON = {
   if (rx) {
     const tpl = $('#rx-template').innerHTML; let i = rx.children.length;
     $('#rx-add').onclick = () => { rx.insertAdjacentHTML('beforeend', tpl.replaceAll('__i__', i++)); };
-    rx.addEventListener('click', e => { if (e.target.closest('[data-rx-del]')) e.target.closest('.rx-row').remove(); });
+    rx.addEventListener('click', e => { if (e.target.closest('[data-rx-del]')) (e.target.closest('.rx-blok') || e.target.closest('.rx-row')).remove(); });
   }
 
   /* ---------- Notifikasi real-time (polling 15 dtk) ---------- */

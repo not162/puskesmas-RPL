@@ -16,7 +16,7 @@
   </script>
   <link rel="preload" href="{{ asset('vendor/fonts/plus-jakarta-sans-latin-600.woff2') }}" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="{{ asset('css/app.css') }}?v=5">
-  <link rel="stylesheet" href="{{ asset('css/landing.css') }}?v=4">
+  <link rel="stylesheet" href="{{ asset('css/landing.css') }}?v=5">
   @stack('head')
 </head>
 <body class="@yield('body-class')">
@@ -70,7 +70,7 @@
   @endphp
   <script>window.__WS = @json($ws);</script>
   <script src="{{ asset('js/loader.js') }}?v=1"></script>
-  <script src="{{ asset('js/app.js') }}?v=5"></script>
+  <script src="{{ asset('js/app.js') }}?v=6"></script>
   @if ($ws)
   <script src="{{ asset('vendor/pusher.min.js') }}"></script>
   <script src="{{ asset('vendor/echo.iife.js') }}"></script>

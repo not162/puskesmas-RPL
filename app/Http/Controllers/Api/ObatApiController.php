@@ -35,7 +35,12 @@ class ObatApiController extends Controller
 
     private function valid(Request $r): array
     {
-        return $r->validate(['nama_obat' => 'required|max:100', 'satuan' => 'required|max:20', 'stok' => 'required|integer|min:0']);
+        $aturan = \App\Http\Controllers\Farmasi\ObatController::aturan($r->route('obat'));
+        if (! $r->filled('kode')) $r->merge(['kode' => $r->route('obat')?->kode ?? Obat::kodeBerikut()]);
+        foreach (['kategori' => 'Vitamin & Pemulihan', 'bentuk' => 'Tablet', 'poli' => 'umum', 'keamanan_hamil' => 'konsultasi', 'jumlah_bawaan' => 10, 'stok_minimum' => 20] as $k => $v) {
+            if (! $r->filled($k)) $r->merge([$k => $r->route('obat')?->$k ?? $v]);
+        }
+        return $r->validate($aturan);
     }
 }
 
