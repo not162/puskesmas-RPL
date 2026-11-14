@@ -41,7 +41,10 @@ class Otp
         ]);
 
         try {
-            Mail::to($email)->send(new KodeOtpMail($kode, $tujuan, self::BERLAKU_MENIT));
+            $mail = new KodeOtpMail($kode, $tujuan, self::BERLAKU_MENIT);
+            config('otp.pengiriman') === 'antrean'
+                ? Mail::to($email)->queue($mail)   // halaman tidak menunggu SMTP
+                : Mail::to($email)->send($mail);
         } catch (\Throwable $e) {
             $otp->delete();
             report($e);

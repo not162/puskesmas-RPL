@@ -98,6 +98,26 @@ class AlurPuskesmasTest extends TestCase
         $this->assertTrue(\Illuminate\Support\Facades\Hash::check('BaruSekali9', $this->akun('pasien')->fresh()->password));
     }
 
+    public function test_otp_mode_antrean_tidak_menahan_halaman(): void
+    {
+        config(['otp.pengiriman' => 'antrean']);
+        $this->post('/lupa-password', ['login' => 'pasien'])->assertRedirect('/lupa-password/verifikasi');
+        Mail::assertQueued(KodeOtpMail::class, fn ($m) => $m->hasTo('pasien@puskesmas.test') && $m->tries === 3);
+        Mail::assertNotSent(KodeOtpMail::class);
+    }
+
+    public function test_cek_kesiapan_dan_qr_tanpa_cdn(): void
+    {
+        $this->artisan('puskesmas:cek')->expectsOutputToContain('Database')->expectsOutputToContain('Password awal')->assertSuccessful();
+        $this->actingAs($this->akun('pasien'))->post('/pasien/antrean', ['id_spesialisasi' => 1, 'tanggal' => today()->toDateString()]);
+        $a = Antrian::first();
+        $html = $this->get("/pasien/antrean/{$a->kode}/tiket")->assertOk()->getContent();
+        $this->assertStringContainsString('<svg', $html);
+        $this->assertStringNotContainsString('cdn.jsdelivr', $html);
+        $this->assertStringNotContainsString('cdn.jsdelivr', $this->get('/api/docs')->getContent());
+        $this->assertStringNotContainsString('fonts.googleapis', $this->get('/')->getContent());
+    }
+
     public function test_data_ganda_diarahkan_ke_login_atau_lupa_password(): void
     {
         $dasar = ['nik' => '3171010101990077', 'no_kk' => '3171010101990000', 'nama' => 'Pasien Baru', 'tgl_lahir' => '1990-02-02', 'jenis_kelamin' => 'L',

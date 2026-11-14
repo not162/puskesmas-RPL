@@ -9,10 +9,8 @@
     (function () { var t = null; try { t = localStorage.getItem('tema'); } catch (e) {}
       document.documentElement.dataset.theme = t || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'); })();
   </script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{{ asset('css/app.css') }}?v=3">
+  <link rel="preload" href="{{ asset('vendor/fonts/plus-jakarta-sans-latin-600.woff2') }}" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="{{ asset('css/app.css') }}?v=4">
   @stack('head')
 </head>
 <body class="@yield('body-class')">

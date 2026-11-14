@@ -167,6 +167,24 @@ php artisan test
 
 Mencakup login 7 peran (password berbeda, captcha), lupa password, registrasi pasien + upload KTP, alur 10 langkah beserta notifikasi, QR HMAC asli vs palsu, API kiosk (tanda tangan salah/kedaluwarsa/replay), real-time, navigasi & pembatasan tiap peran, pengaduan, audit, dan CRUD API.
 
+## Cek kesiapan & antrean email
+
+```bash
+php artisan puskesmas:cek
+```
+
+Menampilkan status database, SMTP (uji login), kunci HMAC, akun yang masih memakai password awal, email contoh yang tidak bisa menerima OTP, antrean, penyimpanan, dan identitas Puskesmas. Tambahkan `--kirim-uji=alamat@gmail.com` untuk mengirim email uji.
+
+`OTP_PENGIRIMAN=antrean` (disarankan untuk produksi) membuat halaman tidak menunggu SMTP; jalankan worker:
+
+```bash
+php artisan queue:work --tries=3
+```
+
+Di Laragon tanpa worker, pakai `OTP_PENGIRIMAN=langsung`. Semua aset (font, Swagger UI, QR) disajikan dari server sendiri, tanpa CDN.
+
+Rencana perbaikan bertahap ada di [docs/RENCANA-SPRINT.md](docs/RENCANA-SPRINT.md).
+
 ## Hak cipta
 
 🇮🇩 Dibuat di Indonesia · © 2026 Seluruh hak cipta dilindungi · Grup NussCorp Technologies Indonesia
