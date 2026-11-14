@@ -39,8 +39,11 @@ class Hmac
         }
         $a = Antrian::where('kode', strtolower($m[1]))->orWhere('kode', $m[1])->first();
         if (! $a) return null;
-        $harap = substr(self::tanda(self::payloadTiket($a)), 0, 32);
-        return hash_equals($harap, $m[2]) ? $a : null;
+        $payload = self::payloadTiket($a);
+        if (hash_equals(substr(self::tanda($payload), 0, 32), $m[2])) return $a;
+        // Masa transisi rotasi kunci: tiket yang ditandatangani kunci lama masih diterima
+        $lama = config('hmac.secret_lama');
+        return $lama && hash_equals(substr(self::tanda($payload, $lama), 0, 32), $m[2]) ? $a : null;
     }
 
     /** String kanonik permintaan kiosk: METHOD \n PATH \n TIMESTAMP \n SHA256(body) */

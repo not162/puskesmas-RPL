@@ -204,6 +204,10 @@ Rencana perbaikan bertahap ada di [docs/RENCANA-SPRINT.md](docs/RENCANA-SPRINT.m
 
 Panduan lengkap VPS & cPanel: [docs/DEPLOY.md](docs/DEPLOY.md). Berkas konfigurasi: folder `deploy/`. Cadangan basis data: `php artisan puskesmas:cadangkan` (otomatis setiap hari pukul 02.00 lewat penjadwal).
 
+## Pemeliharaan
+
+Pemantauan otomatis tiap jam (`php artisan puskesmas:pantau`), halaman **Kesehatan Sistem** untuk Super Admin, pemeriksaan celah pustaka mingguan, dan rotasi kunci (`php artisan puskesmas:rotasi-kunci --hmac`). SOP lengkap: [docs/PEMELIHARAAN.md](docs/PEMELIHARAAN.md).
+
 ## Privasi & pengujian
 
 - Kebijakan privasi di `/kebijakan-privasi` mengacu UU PDP, UU ITE, UU Kesehatan, Permenkes 24/2022, dan ISO/IEC 27001:2022 (bukan klaim sertifikasi). Nomor Permenkes tambahan diisi di Pengaturan.

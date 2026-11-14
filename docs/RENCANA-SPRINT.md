@@ -13,7 +13,7 @@ Status: ✅ selesai · 🔄 berjalan · ⏳ menunggu persetujuan · ⬜ belum di
 | 6 | Sprint 5 — Notifikasi WhatsApp | Gateway WA (mis. Fonnte) untuk panggilan antrean & OTP cadangan | ✅ |
 | 7 | Pengujian sistem (UAT) | Uji menyeluruh 7 peran, skenario lapangan, uji beban ringan | ✅ |
 | 8 | Deploy | VPS + HTTPS, Nginx, Supervisor (queue/reverb), cron, backup DB | ✅ paket siap & teruji; pemasangan di server menunggu akses |
-| 9 | Pemeliharaan | Monitoring log, rotasi kunci, pembaruan dependensi | ⏳ |
+| 9 | Pemeliharaan | Monitoring log, rotasi kunci, pembaruan dependensi | ✅ |
 
 ---
 
@@ -92,5 +92,11 @@ Status: ✅ selesai · 🔄 berjalan · ⏳ menunggu persetujuan · ⬜ belum di
 
 **Hasil:** folder `deploy/` (Nginx, PHP + OPcache, PHP-FPM, Supervisor antrean & Reverb, cron, `deploy.sh`, `.env` produksi, `.htaccess` cPanel) + [DEPLOY.md](DEPLOY.md) untuk VPS & cPanel + daftar periksa go-live. Ditambahkan: `puskesmas:cadangkan` (cadangan harian gzip, retensi 14 hari; **pemulihan diuji**), jadwal tugas, header keamanan, proxy tepercaya. Konfigurasi Nginx lulus `nginx -t`; uji beban susunan mirip produksi: 43,7 permintaan/detik, 0 gagal, p50 ≤1 dtk untuk 50 pengguna. Pemasangan di server sungguhan dilakukan pemilik server mengikuti DEPLOY.md.
 
-## Fase 9 — Pemeliharaan (⬜)
+## Fase 9 — Pemeliharaan (✅)
 - Pantau `storage/logs`, rotasi `HMAC_SECRET`/`KIOSK_HMAC_SECRET` berkala, `composer audit` bulanan.
+
+**Hasil:** `puskesmas:pantau` (10 pemeriksaan: basis data, cadangan, error log, antrean, WhatsApp, percobaan masuk, pengaduan > 3 hari, disk, umur kunci, celah pustaka) tiap jam dengan notifikasi ke Super Admin (maks. 1x/hari per masalah); halaman **Kesehatan Sistem**; `puskesmas:audit-dependensi` mingguan (saat ini 0 celah); `puskesmas:rotasi-kunci` dengan masa transisi agar tiket lama tetap valid; log harian disimpan 30 hari; SOP [PEMELIHARAAN.md](PEMELIHARAAN.md) (harian sampai tahunan + penanganan insiden & kebocoran data 3x24 jam). 27/27 test (459 assertion) lolos.
+
+---
+
+**Status akhir: semua fase 1–9 selesai.** Yang tersisa di luar kode: mengisi kredensial layanan (SMTP Gmail, Fonnte, Turnstile), memasang di server mengikuti DEPLOY.md, dan menandatangani berita acara.

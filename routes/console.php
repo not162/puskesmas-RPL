@@ -11,6 +11,12 @@ use Illuminate\Support\Facades\Schedule;
 // Cadangan basis data setiap hari pukul 02.00, disimpan 14 hari
 Schedule::command('puskesmas:cadangkan --simpan=14')->dailyAt('02:00')->withoutOverlapping()->onOneServer();
 
+// Pemantauan kesehatan setiap jam (peringatan ke Super Admin bila ada masalah, maks. 1x/hari per masalah)
+Schedule::command('puskesmas:pantau --kirim')->hourly()->withoutOverlapping();
+
+// Celah keamanan pustaka setiap Senin pukul 03.00
+Schedule::command('puskesmas:audit-dependensi')->weeklyOn(1, '03:00');
+
 // Kode OTP kedaluwarsa (lebih dari 1 hari) dihapus
 Schedule::call(fn () => \App\Models\OtpKode::where('kedaluwarsa', '<', now()->subDay())->delete())
     ->name('hapus-otp-kedaluwarsa')->hourly();
