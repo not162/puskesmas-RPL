@@ -32,6 +32,7 @@ Route::redirect('/layar-antrian', '/layar-antrean');
 Route::redirect('/dokter', '/jadwal');
 Route::view('/kebijakan-privasi', 'public.privasi')->name('privasi');
 Route::view('/api/docs', 'swagger')->name('swagger');
+Route::get('/avatar/{akun}', [ProfilController::class, 'avatar'])->name('avatar');
 
 /* ---------- Gateway login (semua peran) & registrasi (pasien saja) ---------- */
 Route::middleware('guest')->group(function () {

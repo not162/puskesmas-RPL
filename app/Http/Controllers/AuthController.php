@@ -200,6 +200,7 @@ class AuthController extends Controller
             'email' => ['required', 'email:rfc', 'max:100'],
             'no_bpjs' => ['nullable', 'digits:13', 'unique:pasien,no_bpjs'],
             'password' => ['required', 'confirmed', AturanSandi::min(8)],
+            'foto' => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp', 'max:2048'],
             'foto_ktp' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
             'setuju' => ['accepted'],
         ], [
@@ -207,13 +208,19 @@ class AuthController extends Controller
             'no_tlp.regex' => 'Nomor HP harus diawali 08, 628, atau +628.',
             'email.required' => 'Email wajib diisi untuk menerima kode OTP.',
             'setuju.accepted' => 'Anda wajib menyetujui Kebijakan Privasi.',
+            'foto.image' => 'Berkas avatar harus berupa file gambar.',
+            'foto.mimes' => 'Format foto avatar harus berupa file .png, .jpg, .jpeg, atau .webp.',
+            'foto.max' => 'Ukuran foto avatar maksimal 2 MB.',
             'foto_ktp.max' => 'Ukuran file KTP maksimal 5 MB.',
-        ], ['nik' => 'NIK', 'no_kk' => 'Nomor KK', 'no_tlp' => 'nomor HP', 'tgl_lahir' => 'tanggal lahir', 'no_bpjs' => 'nomor BPJS', 'foto_ktp' => 'foto/scan KTP']);
+        ], ['nik' => 'NIK', 'no_kk' => 'Nomor KK', 'no_tlp' => 'nomor HP', 'tgl_lahir' => 'tanggal lahir', 'no_bpjs' => 'nomor BPJS', 'foto' => 'foto avatar', 'foto_ktp' => 'foto/scan KTP']);
 
         // 2) Simpan sementara, kirim OTP ke email pengguna
-        $payload = collect($data)->except(['password', 'password_confirmation', 'setuju', 'foto_ktp'])->all();
+        $payload = collect($data)->except(['password', 'password_confirmation', 'setuju', 'foto_ktp', 'foto'])->all();
         $payload['wa_opt_in'] = $request->boolean('wa_opt_in');
         $payload['password'] = Hash::make($data['password']);
+        if ($request->hasFile('foto')) {
+            $payload['foto'] = $request->file('foto')->store('avatars/sementara', 'public');
+        }
         if ($request->hasFile('foto_ktp')) {
             $payload['foto_ktp'] = $request->file('foto_ktp')->store('ktp/sementara', 'local');
         }
@@ -278,10 +285,16 @@ class AuthController extends Controller
         if (CekDuplikat::cari($p)) return null;
 
         $pasien = DB::transaction(function () use ($p) {
-            $akun = Akun::create([
+            $akunData = [
                 'id_peran' => Peran::where('nama_peran', Peran::PASIEN)->value('id_peran'),
                 'username' => $p['username'], 'email' => $p['email'], 'password' => $p['password'], 'status' => 'aktif',
-            ]);
+            ];
+            if (! empty($p['foto']) && Storage::disk('public')->exists($p['foto'])) {
+                $tujuanFoto = 'avatars/'.basename($p['foto']);
+                Storage::disk('public')->move($p['foto'], $tujuanFoto);
+                $akunData['foto'] = $tujuanFoto;
+            }
+            $akun = Akun::create($akunData);
             $profil = collect($p)->only(['nik', 'no_kk', 'nama', 'tgl_lahir', 'jenis_kelamin', 'no_tlp', 'alamat', 'no_bpjs'])->all();
             $profil['wa_opt_in'] = (bool) ($p['wa_opt_in'] ?? false);
             if (! empty($p['foto_ktp']) && Storage::disk('local')->exists($p['foto_ktp'])) {

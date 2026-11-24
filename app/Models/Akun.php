@@ -19,7 +19,7 @@ class Akun extends Authenticatable
 
     protected $table = 'akun';
     protected $primaryKey = 'id_akun';
-    protected $fillable = ['id_peran', 'username', 'email', 'password', 'status'];
+    protected $fillable = ['id_peran', 'username', 'email', 'password', 'status', 'foto'];
     protected $hidden = ['password', 'remember_token'];
 
     protected ?array $izinCache = null;
@@ -77,6 +77,24 @@ class Akun extends Authenticatable
     public function aktif(): bool
     {
         return $this->status === 'aktif';
+    }
+
+    public function avatarUrl(): string
+    {
+        if ($this->foto && \Illuminate\Support\Facades\Storage::disk('public')->exists($this->foto)) {
+            return asset('storage/'.$this->foto);
+        }
+        return route('avatar', $this, false);
+    }
+
+    public function inisial(): string
+    {
+        $nama = trim(preg_replace('/^(dr\.|drg\.|apt\.|ns\.)\s*/i', '', (string) $this->namaTampil()));
+        $parts = preg_split('/\s+/', $nama);
+        if (count($parts) >= 2) {
+            return strtoupper(mb_substr($parts[0], 0, 1) . mb_substr($parts[1], 0, 1));
+        }
+        return strtoupper(mb_substr($nama ?: $this->username, 0, 2) ?: 'PK');
     }
 }
 

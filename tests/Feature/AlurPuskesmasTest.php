@@ -543,4 +543,56 @@ class AlurPuskesmasTest extends TestCase
         $ref = $this->postJson('/api/v1/auth/login', ['login' => 'ani_01', 'password' => 'rahasia123'])->assertStatus(202)->json('otp_ref');
         $this->postJson('/api/v1/auth/login/verifikasi', ['otp_ref' => $ref, 'kode' => $this->kodeOtp('ani01@gmail.com')])->assertOk()->assertJsonStructure(['token']);
     }
+
+    public function test_profil_avatar_dan_disable_hp_alamat(): void
+    {
+        \Illuminate\Support\Facades\Storage::fake('public');
+
+        $pasienAkun = $this->akun('pasien');
+        $pasienModel = $pasienAkun->pasien;
+        $noTlpAwal = $pasienModel->no_tlp;
+        $alamatAwal = $pasienModel->alamat;
+
+        // 1. Halaman profil menampilkan Nomor HP dan Alamat terkunci/disabled
+        $res = $this->actingAs($pasienAkun)->get('/profil')->assertOk();
+        $res->assertSee('Terkunci (Sesuai Registrasi)');
+        $res->assertSee('disabled', false);
+
+        // 2. Upaya mengubah nomor HP dan alamat melalui form profil pasien diabaikan (tetap data awal)
+        $this->actingAs($pasienAkun)->put('/profil', [
+            'email' => 'pasien.baru@example.com',
+            'no_tlp' => '089999999999',
+            'alamat' => 'Alamat Berubah Ilegal',
+            'wa_opt_in' => '1',
+        ])->assertSessionHas('alert');
+
+        $pasienModel->refresh();
+        $this->assertSame($noTlpAwal, $pasienModel->no_tlp);
+        $this->assertSame($alamatAwal, $pasienModel->alamat);
+
+        // 3. Pasien dapat mengunggah avatar foto dengan format/ukuran standar (.jpg/.png)
+        $foto = \Illuminate\Http\UploadedFile::fake()->image('profil.jpg', 300, 300)->size(500); // 500 KB
+        $this->actingAs($pasienAkun)->put('/profil', [
+            'email' => 'pasien.baru@example.com',
+            'foto' => $foto,
+        ])->assertSessionHas('alert');
+
+        $pasienAkun->refresh();
+        $this->assertNotNull($pasienAkun->foto);
+        \Illuminate\Support\Facades\Storage::disk('public')->assertExists($pasienAkun->foto);
+
+        // 4. Endpoint avatar mengembalikan file foto yang diunggah
+        $this->get('/avatar/'.$pasienAkun->id_akun)->assertOk();
+
+        // 5. Pasien dapat menghapus foto dan kembali ke inisial SVG
+        $this->actingAs($pasienAkun)->put('/profil', [
+            'email' => 'pasien.baru@example.com',
+            'hapus_foto' => '1',
+        ])->assertSessionHas('alert');
+
+        $pasienAkun->refresh();
+        $this->assertNull($pasienAkun->foto);
+        $resSvg = $this->get('/avatar/'.$pasienAkun->id_akun)->assertOk();
+        $this->assertStringContainsString('image/svg+xml', $resSvg->headers->get('Content-Type'));
+    }
 }

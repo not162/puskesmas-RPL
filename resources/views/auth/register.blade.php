@@ -29,6 +29,10 @@
         @include('partials.password', ['name' => 'password', 'label' => 'Password', 'hint' => 'Minimal 8 karakter.'])
         @include('partials.password', ['name' => 'password_confirmation', 'label' => 'Ulangi password'])
       </div>
+      <div class="field"><label for="foto">Foto Avatar / Profil (opsional)</label>
+        <input id="foto" type="file" name="foto" accept=".jpg,.jpeg,.png,.webp" class="input @error('foto') err @enderror">
+        <div class="hint">Format standar .PNG, .JPG, atau .WEBP, maks 2 MB. Menjadi foto profil akun Anda.</div>
+        @error('foto')<div class="err-msg">{{ $message }}</div>@enderror</div>
       <div class="field"><label for="foto_ktp">Foto/scan KTP (opsional)</label>
         <input id="foto_ktp" type="file" name="foto_ktp" accept=".jpg,.jpeg,.png,.pdf" class="input @error('foto_ktp') err @enderror">
         <div class="hint">JPG/PNG/PDF, maks 5 MB. Disimpan privat, tidak tampil di halaman publik.</div>

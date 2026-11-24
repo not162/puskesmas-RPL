@@ -54,7 +54,13 @@
 <div class="shell">
   <aside class="sidebar" aria-label="Menu samping">
     <a href="{{ route('beranda') }}" class="brand"><span class="brand-mark"><x-ico n="cross"/></span> {{ $namaPkm }}</a>
-    <div class="role-chip"><b>{{ $u->namaTampil() }}</b><span class="muted">{{ $u->peran->label }} · {{ '@'.$u->username }}</span></div>
+    <div class="role-chip" style="display:flex;align-items:center;gap:10px">
+      <img src="{{ $u->avatarUrl() }}" alt="Avatar {{ $u->namaTampil() }}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:1px solid var(--line);background:var(--panel-2);flex:none">
+      <div style="min-width:0;flex:1">
+        <b style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;font-size:13.5px">{{ $u->namaTampil() }}</b>
+        <span class="muted" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;font-size:11.5px">{{ $u->peran->label }} · {{ '@'.$u->username }}</span>
+      </div>
+    </div>
     <div class="side-label">Menu {{ $u->peran->label }}</div>
     @foreach ($nav as $it)
       <a href="{{ $url($it) }}" class="side-link {{ $aktif($it) ? 'active' : '' }}"><x-ico :n="$it[2]"/> {{ $it[1] }}
@@ -86,6 +92,9 @@
             <a href="{{ route('notifikasi') }}" class="notif-item" style="justify-content:center;font-weight:700">Lihat semua</a>
           </div>
         </div>
+        <a href="{{ route('profil') }}" class="btn btn-icon btn-ghost" title="Profil & Keamanan" aria-label="Profil & Keamanan" style="padding:2px;overflow:hidden;border-radius:50%">
+          <img src="{{ $u->avatarUrl() }}" alt="Profil" style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:1px solid var(--line);background:var(--panel-2)">
+        </a>
       </div>
     </header>
     <div class="content">@yield('content')</div>
