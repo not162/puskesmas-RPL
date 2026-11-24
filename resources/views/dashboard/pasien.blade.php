@@ -5,19 +5,6 @@
 <div class="page-h"><div><h2>Halo, {{ $pasien->nama }}</h2><p>No. RM <b>{{ $pasien->no_rm }}</b> · NIK {{ $pasien->nikSamaran() }}</p></div>
   <div class="flex"><a href="{{ route('pasien.konsultasi.create') }}" class="btn"><x-ico n="chat"/> Konsultasi online</a><a href="{{ route('pasien.antrian.create') }}" class="btn btn-primary"><x-ico n="ticket"/> Ambil antrean</a></div></div>
 
-<div class="card">
-  <div class="card-h"><h3>Progres layanan Anda</h3><span class="badge b-info">Langkah {{ $langkah }} dari {{ count($alur) }}</span></div>
-  <div class="steps-h">
-    @foreach ($alur as $no => $l)
-      <div class="step-h {{ $no < $langkah ? 'done' : ($no === $langkah ? 'now' : '') }}"><div class="n">@if($no < $langkah)<x-ico n="check"/>@else{{ $no }}@endif</div>{{ $l['judul'] }}</div>
-    @endforeach
-  </div>
-  @php $next = $alur[min($langkah + 1, count($alur))] ?? null; @endphp
-  @if ($next && $langkah < count($alur))
-    <div class="notif-preview"><b>Langkah berikutnya: {{ $next['judul'] }}.</b> <span class="muted">{{ $next['syarat'] }}</span></div>
-  @endif
-</div>
-
 <div class="grid g2 mt">
   <div class="card">
     <div class="card-h"><h3>Antrean aktif</h3><a href="{{ route('pasien.antrian.index') }}">Semua</a></div>

@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Resep & Obat')
 @section('content')
-<div class="page-h"><div><h2>Resep saya</h2><p>Langkah 8–10 · Pantau resep dari dokter hingga obat diserahkan.</p></div></div>
+<div class="page-h"><div><h2>Resep saya</h2><p>Pantau resep dari dokter hingga penyerahan obat.</p></div></div>
 @forelse ($resep as $r)
   <div class="card">
     <div class="card-h"><div><b>{{ $r->dokter->nama }}</b> <span class="muted">· {{ $r->dokter->spesialisasi->poli }} · {{ $r->tgl_resep->format('d/m/Y H:i') }}</span></div>@include('partials.status', ['s' => $r->status])</div>

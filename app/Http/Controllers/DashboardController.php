@@ -9,7 +9,6 @@ use App\Models\Obat;
 use App\Models\Pasien;
 use App\Models\Peran;
 use App\Models\Resep;
-use App\Support\AlurPasien;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
@@ -59,8 +58,6 @@ class DashboardController extends Controller
         $p = $akun->pasien;
         return view('dashboard.pasien', [
             'pasien' => $p,
-            'langkah' => AlurPasien::langkahSaatIni($p),
-            'alur' => config('alur.langkah'),
             'antrianAktif' => $p->antrian()->with('spesialisasi')->whereIn('status', ['menunggu', 'hadir', 'dipanggil', 'dilayani'])->whereDate('tanggal', '>=', today())->orderBy('tanggal')->get(),
             'konsultasi' => $p->konsultasi()->with('spesialisasi', 'dokter')->latest('id_konsultasi')->limit(3)->get(),
             'resep' => $p->resep()->latest('id_resep')->limit(3)->get(),

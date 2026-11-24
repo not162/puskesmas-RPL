@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Notifikasi')
 @section('content')
-<div class="page-h"><div><h2>Semua notifikasi</h2><p>Riwayat pemberitahuan setiap langkah layanan.</p></div>
+<div class="page-h"><div><h2>Semua notifikasi</h2><p>Riwayat pemberitahuan aktivitas dan layanan kesehatan Anda.</p></div>
   <form method="POST" action="{{ route('notifikasi.bacaSemua') }}">@csrf<button class="btn"><x-ico n="check"/> Tandai semua dibaca</button></form></div>
 <div class="card" style="padding:0;overflow:hidden">
   @forelse ($notifikasi as $n)
