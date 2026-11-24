@@ -56,19 +56,10 @@ const ICON = {
   };
   (window.__ALERTS || []).forEach(a => toast(a.tipe, a.judul, a.pesan));
 
-  /* ---------- Alert Aktivitas Setiap Klik Tombol ---------- */
+  /* ---------- Alert & Interaksi Tombol (Smooth & Responsif) ---------- */
   document.addEventListener('click', e => {
     const b = e.target.closest('button, .btn, [role="button"], input[type="submit"]');
     if (!b || b.disabled) return;
-
-    // Feedback haptik/audio klik
-    soundBeep([520], 0.04, 0.04);
-
-    // Efek visual klik aktif
-    b.classList.remove('btn-clicked');
-    void b.offsetWidth;
-    b.classList.add('btn-clicked');
-    setTimeout(() => b.classList.remove('btn-clicked'), 350);
 
     // Notifikasi alert khusus jika atribut data-alert-click disetel
     if (b.dataset.alertClick) {

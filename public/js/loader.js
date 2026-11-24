@@ -1,4 +1,4 @@
-/* Layar pembuka (sekali per sesi) & payloader saat berpindah link lokal (tanpa slogan). */
+/* Layar pembuka (splash screen awal sesi) tanpa overlay payloader yang mengganggu saat navigasi */
 (() => {
   const el = document.getElementById('pembuka');
   if (!el) return;
@@ -6,29 +6,53 @@
   const tutup = () => {
     el.classList.add('hilang');
     el.classList.remove('muat', 'tampil-slogan');
-    setTimeout(() => el.setAttribute('aria-hidden', 'true'), 250);
+    setTimeout(() => {
+      el.setAttribute('aria-hidden', 'true');
+      el.style.display = 'none';
+    }, 250);
   };
 
-  // 1) Layar pembuka sesi pertama: tampil sekali saat buka aplikasi (dengan slogan)
+  // 1) Layar pembuka: hanya tampil sekali saat kunjungan pertama sesi baru
   if (!root.classList.contains('tanpa-pembuka')) {
     el.removeAttribute('aria-hidden');
-    setTimeout(() => el.classList.add('tampil-slogan'), 200);
+    setTimeout(() => el.classList.add('tampil-slogan'), 150);
     const mulai = performance.now();
-    const selesai = () => setTimeout(tutup, Math.max(0, 900 - (performance.now() - mulai)));
+    const selesai = () => setTimeout(tutup, Math.max(0, 600 - (performance.now() - mulai)));
     document.readyState === 'complete' ? selesai() : addEventListener('load', selesai, { once: true });
     document.getElementById('pembuka-lewati')?.addEventListener('click', tutup);
     try { sessionStorage.setItem('pembuka', '1'); } catch (e) {}
+  } else {
+    tutup();
   }
 
-  // 2) Payloader: HANYA berjalan ketika link lokal di-klik, TANPA memunculkan slogan
-  let timer;
-  const tampilPayloader = () => {
-    clearTimeout(timer);
-    timer = setTimeout(() => {
-      el.classList.remove('hilang', 'tampil-slogan');
-      el.classList.add('muat');
-      el.removeAttribute('aria-hidden');
-    }, 180);
+  // 2) Top progress bar ramping saat berpindah link lokal (smooth ala browser modern, tanpa layar tertutup)
+  let bar = document.getElementById('pwa-progress-bar');
+  if (!bar) {
+    bar = document.createElement('div');
+    bar.id = 'pwa-progress-bar';
+    document.body.prepend(bar);
+  }
+
+  let progressTimer;
+  const startProgress = () => {
+    clearTimeout(progressTimer);
+    bar.style.transition = 'none';
+    bar.style.width = '0%';
+    bar.style.opacity = '1';
+    requestAnimationFrame(() => {
+      bar.style.transition = 'width 0.4s ease';
+      bar.style.width = '70%';
+    });
+  };
+
+  const finishProgress = () => {
+    clearTimeout(progressTimer);
+    bar.style.transition = 'width 0.2s ease, opacity 0.2s ease';
+    bar.style.width = '100%';
+    progressTimer = setTimeout(() => {
+      bar.style.opacity = '0';
+      setTimeout(() => { bar.style.width = '0%'; }, 200);
+    }, 200);
   };
 
   document.addEventListener('click', e => {
@@ -45,24 +69,13 @@
       return;
     }
 
-    // Hanya untuk link lokal (domain yang sama), bukan tab baru atau unduhan
     if (a.target === '_blank' || a.hasAttribute('download') || url.origin !== location.origin) return;
-
-    // Abaikan jika menuju halaman yang sama persis (termasuk hash)
     if (url.pathname === location.pathname && url.search === location.search) return;
+    if (/\/(tiket|export|xlsx|pdf|unduh-data)/.test(url.pathname)) return;
 
-    // Abaikan unduhan dokumen / aksi khusus
-    if (/\/(tiket|export|xlsx|pdf|unduh-data|notifikasi\/[^/]+\/baca)/.test(url.pathname) && !/\/baca/.test(url.pathname)) return;
-
-    tampilPayloader();
+    startProgress();
   });
 
-  // Navigasi kembali (bfcache) atau halaman siap: sembunyikan payloader
-  addEventListener('pageshow', () => { clearTimeout(timer); tutup(); });
-  addEventListener('blur', () => { clearTimeout(timer); });
-
-  // Batas aman payloader otomatis hilang jika halaman tidak kunjung berpindah dalam 8 detik
-  new MutationObserver(() => {
-    if (el.classList.contains('muat')) setTimeout(tutup, 8000);
-  }).observe(el, { attributes: true, attributeFilter: ['class'] });
+  addEventListener('pageshow', finishProgress);
+  addEventListener('load', finishProgress);
 })();

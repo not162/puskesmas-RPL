@@ -7,7 +7,13 @@
   <title>@yield('title', 'Beranda') · {{ $namaPkm }}</title>
   <meta name="description" content="{{ $namaPkm }}: ambil antrean dari rumah, konsultasi dengan dokter, dan pantau panggilan antrean.">
   <meta name="theme-color" content="#2563eb">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Puskesmas">
+  <link rel="manifest" href="{{ asset('manifest.json') }}">
   <link rel="icon" href="{{ asset('images/logo-puskesmas.svg') }}" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="{{ asset('images/logo-puskesmas.svg') }}">
   <script>
     (function () { var t = null; try { t = localStorage.getItem('tema'); } catch (e) {}
       document.documentElement.dataset.theme = t || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
@@ -77,6 +83,13 @@
   <script src="{{ asset('js/websocket.js') }}?v=2"></script>
   @endif
   <script src="{{ asset('js/realtime.js') }}?v=3"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('{{ asset('sw.js') }}').catch(function () {});
+      });
+    }
+  </script>
   @stack('scripts')
 </body>
 </html>

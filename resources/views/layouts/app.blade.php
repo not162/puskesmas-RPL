@@ -39,8 +39,15 @@
   if ($r !== 'pasien') $lain[] = ['profil', 'Profil & Keamanan', 'user'];
   $url = fn ($it) => route($it[0], $it[3] ?? []);
   $aktif = function ($it) {
-    if (isset($it[3])) return request()->routeIs($it[0]) && collect($it[3])->every(fn ($v, $k) => request($k) === $v);
-    return request()->routeIs($it[0]) || (substr_count($it[0], '.') >= 1 && ! str_ends_with($it[0], 'create') && request()->routeIs(\Illuminate\Support\Str::beforeLast($it[0], '.').'.*') && ! request()->routeIs('*.create'));
+    if (isset($it[3])) {
+      return request()->routeIs($it[0]) && collect($it[3])->every(fn ($v, $k) => request($k) === $v);
+    }
+    if (request()->routeIs($it[0])) return true;
+    if (str_ends_with($it[0], '.index')) {
+      $base = \Illuminate\Support\Str::beforeLast($it[0], '.index');
+      return request()->routeIs($base.'.*') && ! request()->routeIs($base.'.create');
+    }
+    return false;
   };
 @endphp
 <div class="shell">

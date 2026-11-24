@@ -1,0 +1,19 @@
+{
+  "name": "Puskesmas Sehat",
+  "short_name": "Puskesmas",
+  "description": "Sistem Informasi dan Pelayanan Puskesmas",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#2563eb",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/images/logo-puskesmas.svg",
+      "sizes": "48x48 72x72 96x96 128x128 192x192 256x256 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
