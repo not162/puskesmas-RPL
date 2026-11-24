@@ -168,7 +168,7 @@
 @push('scripts')
 <script>
 (function () {
-  const load = () => fetch(@json(route('live.antrian')), {headers: {Accept: 'application/json'}}).then(r => r.json()).then(d => {
+  const load = () => fetch(@json(route('live.antrian', [], false)), {headers: {Accept: 'application/json'}}).then(r => r.json()).then(d => {
     document.getElementById('live-time').textContent = 'pukul ' + d.diperbarui.slice(0, 5);
     const box = document.getElementById('live-poli'); box.innerHTML = '';
     d.poli.forEach(p => {

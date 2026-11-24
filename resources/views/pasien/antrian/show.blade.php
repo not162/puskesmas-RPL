@@ -31,7 +31,7 @@
 (function () {
   let last = @json($a->status);
   const lbl = {menunggu:'b-warn',hadir:'b-info',dipanggil:'b-info',dilayani:'b-info',selesai:'b-ok',batal:'b-bad'};
-  setInterval(() => fetch(@json(route('pasien.antrian.status', $a)), {headers:{Accept:'application/json'}}).then(r => r.json()).then(d => {
+  setInterval(() => fetch(@json(route('pasien.antrian.status', $a, false)), {headers:{Accept:'application/json'}}).then(r => r.json()).then(d => {
     document.getElementById('st').innerHTML = `<span class="badge ${lbl[d.status]||''}">${d.status[0].toUpperCase()+d.status.slice(1)}</span>`;
     document.getElementById('pos').textContent = ['menunggu','hadir'].includes(d.status) ? `${d.di_depan} antrean di depan Anda` : d.label;
     if (d.status !== last && d.status === 'dipanggil') { document.getElementById('no').classList.add('flash'); toast('warning', 'Nomor Anda dipanggil!', 'Silakan menuju ruang periksa.', 12000); }

@@ -28,7 +28,9 @@ class PublicController extends Controller
 
     public function layarAntrian()
     {
-        return view('public.layar-antrian');
+        return view('public.layar-antrian', [
+            'dataAwal' => AntrianLive::data(),
+        ]);
     }
 
     public function liveAntrian()

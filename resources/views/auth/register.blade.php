@@ -51,7 +51,7 @@
   const render = () => { box.hidden = !ganda.size; lbl.textContent = [...ganda].join(', '); if (ganda.size) box.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); };
   document.querySelectorAll('[data-cek]').forEach(el => el.addEventListener('change', async () => {
     const k = el.dataset.cek, v = el.value.trim();
-    const d = v ? await fetch(@json(route('register.cek')) + '?kolom=' + k + '&nilai=' + encodeURIComponent(v), { headers: { Accept: 'application/json' } }).then(r => r.ok ? r.json() : null).catch(() => null) : null;
+    const d = v ? await fetch(@json(route('register.cek', [], false)) + '?kolom=' + k + '&nilai=' + encodeURIComponent(v), { headers: { Accept: 'application/json' } }).then(r => r.ok ? r.json() : null).catch(() => null) : null;
     if (d && d.terdaftar) { ganda.add(d.label); el.classList.add('err'); } else { ganda.delete(d ? d.label : ''); [...ganda].forEach(g => { if (g && el.closest('.field').querySelector('label').textContent.startsWith(g)) ganda.delete(g); }); el.classList.remove('err'); }
     render();
   }));
