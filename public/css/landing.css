@@ -4,8 +4,13 @@
   transition: opacity .3s, visibility .3s; }
 #pembuka.hilang { opacity: 0; visibility: hidden; }
 html.tanpa-pembuka #pembuka:not(.muat) { display: none; }
-#pembuka.muat { background: color-mix(in srgb, var(--bg) 82%, transparent); backdrop-filter: blur(6px); }
+#pembuka.muat { background: color-mix(in srgb, var(--bg) 78%, transparent); backdrop-filter: blur(4px); }
 #pembuka.muat .pembuka-lewati { display: none; }
+#pembuka.muat .pembuka-slogan,
+#pembuka.muat .pembuka-sub { display: none !important; }
+#pembuka.muat .pembuka-isi { gap: 4px; animation: none; }
+#pembuka.muat .pembuka-isi img { width: 54px; height: 54px; animation: melayang 2s ease-in-out infinite; }
+#pembuka.muat .pembuka-isi b { font-size: 1.15rem; margin-top: 4px; }
 .pembuka-isi { display: grid; gap: 6px; justify-items: center; max-width: 340px; animation: muncul .5s ease-out both; }
 .pembuka-isi img { width: 88px; height: 88px; filter: drop-shadow(0 10px 26px color-mix(in srgb, var(--brand) 50%, transparent)); animation: melayang 2.4s ease-in-out infinite; }
 .pembuka-isi b { font-size: 1.5rem; font-weight: 800; letter-spacing: -.02em; margin-top: 6px; }
