@@ -30,26 +30,30 @@ Database `puskesmas` langsung terlihat di HeidiSQL/phpMyAdmin Laragon. Pengatura
 
 ## Login & 7 Peran Pengguna
 
-Tidak ada akun demo di halaman login. Semua peran masuk dari **gateway tunggal** `/login` (username **atau** email, password dengan tombol tampil/sembunyi, *Ingat saya*, *Lupa password?*, dan verifikasi captcha hitung). Versi kartu ringkas untuk alur pasien ada di `/pasien/masuk` (endpoint sama). **Registrasi mandiri hanya untuk pasien** (`/register`); akun seluruh staf dibuat dan dikelola oleh Super Admin.
+Tidak ada akun demo di halaman login. Semua peran masuk dari **gateway tunggal** `/login` (bisa menggunakan **username** atau **email**, password dengan tombol tampil/sembunyi, fitur *Ingat saya*, *Lupa password?*, dan verifikasi captcha hitung). Versi kartu ringkas untuk alur pasien ada di `/pasien/masuk` (endpoint sama). **Registrasi mandiri hanya untuk pasien** (`/register`); akun seluruh staf dibuat dan dikelola oleh Super Admin.
 
-| Username | Peran | Poli / Unit Kerja | Deskripsi Tugas Utama |
-|---|---|---|---|
-| `superadmin` | Super Admin | Pimpinan & IT Puskesmas | Otoritas penuh sistem, kelola akun staf, RBAC, audit, & pengaturan faskes |
-| `admin` | Admin Puskesmas | Tata Usaha & Operasional | Jadwal praktik, pengumuman, tanggapan aduan, kirim alert, & laporan |
-| `dr.umum`, `dr.umum2` | Dokter Umum | Poli Umum | Pemanggilan antrean poli, pemeriksaan fisik, diagnosis, & resep digital |
-| `dr.kandungan` | Dokter Kandungan | Poli Kandungan / KIA | Pemeriksaan ANC/kehamilan, resep aman bumil, & konsultasi KIA |
-| `apoteker` | Apoteker / Farmasi | Instalasi Farmasi | Penerimaan resep digital, peracikan, penyerahan obat, & stok obat |
-| `loket` | Petugas Loket | Pendaftaran & Front Office | Registrasi walk-in, pencarian No. RM, check-in QR (HMAC), & pantau antrean |
-| `pasien` | Pasien | Pengguna Layanan | Daftar berobat online, e-tiket QR, pantau antrean, resep, avatar profil |
+### Tabel Akun & Kredensial Bawaan (Default Seeder)
 
-Kata sandi awal **berbeda untuk tiap peran** dan dibaca seeder dari `.env` (`SEED_PASSWORD_SUPER_ADMIN`, `…_ADMIN`, `…_DOKTER_UMUM`, `…_DOKTER_KANDUNGAN`, `…_APOTEKER`, `…_LOKET`, `…_PASIEN`). Ganti setelah login pertama lewat **Profil**. Jika `.env` baru disalin dari `.env.example`, isi dulu nilai-nilai tersebut (min. 8 karakter) sebelum `migrate --seed`.
+| Peran | Username | Email Login | Password Default (.env) | Nama Lengkap / Petugas | Unit / Poli |
+|---|---|---|---|---|---|
+| **Super Admin** | `superadmin` | `superadmin@puskesmas.test` | `SuperAdm1n!` | Kepala Puskesmas | Pimpinan & IT Faskes |
+| **Admin** | `admin` | `admin@puskesmas.test` | `Adm1nPkm!` | Admin Tata Usaha | Kantor Tata Usaha |
+| **Dokter Umum** | `dr.umum` | `dokter.umum@puskesmas.test` | `DokterUm1!` | dr. Rina Kartika | Ruang Poli Umum (Pagi) |
+| **Dokter Umum 2** | `dr.umum2` | `dokter.umum2@puskesmas.test` | `DokterUm1!` | dr. Bayu Pratama | Ruang Poli Umum (Siang) |
+| **Dokter Kandungan** | `dr.kandungan` | `dokter.kandungan@puskesmas.test` | `DokterKd1!` | dr. Sari Wulandari, Sp.OG | Ruang Poli KIA / Kandungan |
+| **Apoteker** | `apoteker` | `apoteker@puskesmas.test` | `Apt3ker1!` | apt. Dewi Lestari, S.Farm | Instalasi Farmasi & Gudang Obat |
+| **Petugas Loket** | `loket` | `loket@puskesmas.test` | `Lok3tPkm!` | Andi Loket | Loket Pendaftaran & Front Office |
+| **Pasien (Contoh)** | `pasien` | `pasien@puskesmas.test` | `Pas1en01!` | Budi Santoso (RM-000001) | Pasien Terdaftar |
+
+> **Catatan Keamanan:**
+> Kata sandi awal dibaca oleh seeder dari berkas `.env` (`SEED_PASSWORD_SUPER_ADMIN`, `SEED_PASSWORD_ADMIN`, `SEED_PASSWORD_DOKTER_UMUM`, `SEED_PASSWORD_DOKTER_KANDUNGAN`, `SEED_PASSWORD_APOTEKER`, `SEED_PASSWORD_LOKET`, `SEED_PASSWORD_PASIEN`). Seluruh pengguna sangat disarankan mengganti kata sandi setelah login pertama kali melalui menu **Profil & Keamanan**.
 
 ---
 
 ## Rincian Peran Dokter, Staf, & Pasien
 
 ### 1. Super Admin (Pimpinan Puskesmas & Administrator Sistem)
-- **Akun Bawaan:** `superadmin`
+- **Kredensial Login:** Username: `superadmin` | Email: `superadmin@puskesmas.test` | Password: `SuperAdm1n!`
 - **Tanggung Jawab:**
   - **Kelola Akun Staf:** Membuat akun baru dokter, apoteker, loket, dan admin; mengatur status aktif/nonaktif, serta membuka blokir akun yang terkunci akibat salah sandi.
   - **Manajemen RBAC (Role-Based Access Control):** Mengatur hak akses dan izin granular per peran melalui menu **Peran & Izin**.
@@ -59,7 +63,7 @@ Kata sandi awal **berbeda untuk tiap peran** dan dibaca seeder dari `.env` (`SEE
   - **Laporan Komprehensif:** Mengakses dan mengekspor laporan bulanan kunjungan, poli, dokter, dan pemakaian obat dalam format Excel (.xlsx) dan PDF resmi.
 
 ### 2. Admin Puskesmas (Tata Usaha & Operasional Harian)
-- **Akun Bawaan:** `admin`
+- **Kredensial Login:** Username: `admin` | Email: `admin@puskesmas.test` | Password: `Adm1nPkm!`
 - **Tanggung Jawab:**
   - **Jadwal Praktik Dokter:** Menentukan jadwal dinas dokter umum dan dokter kandungan (hari praktik, jam mulai, jam selesai, dan kuota pasien harian).
   - **Pengumuman Publik:** Mempublikasikan informasi kesehatan, jadwal libur pelayanan, atau agenda vaksinasi/posyandu ke beranda publik.
@@ -68,7 +72,9 @@ Kata sandi awal **berbeda untuk tiap peran** dan dibaca seeder dari `.env` (`SEE
   - **Laporan Operasional:** Memantau statistik kunjungan dan mengunduh berkas laporan bulanan faskes.
 
 ### 3. Dokter Umum (Poli Umum)
-- **Akun Bawaan:** `dr.umum`, `dr.umum2`
+- **Kredensial Login:**
+  - Dokter 1: Username: `dr.umum` | Email: `dokter.umum@puskesmas.test` | Password: `DokterUm1!`
+  - Dokter 2: Username: `dr.umum2` | Email: `dokter.umum2@puskesmas.test` | Password: `DokterUm1!`
 - **Tanggung Jawab:**
   - **Antrean Poli Real-Time:** Melihat daftar pasien Poli Umum yang telah melakukan check-in di loket.
   - **Panggilan Pasien:** Memanggil nomor antrean berikutnya (suara panggilan dan nomor antrean langsung terupdate di layar monitor ruang tunggu).
@@ -79,7 +85,7 @@ Kata sandi awal **berbeda untuk tiap peran** dan dibaca seeder dari `.env` (`SEE
   - **Jadwal Saya:** Memeriksa jadwal dinas dan kuota praktik harian pribadi.
 
 ### 4. Dokter Spesialis Kandungan / KIA (Poli Kandungan)
-- **Akun Bawaan:** `dr.kandungan`
+- **Kredensial Login:** Username: `dr.kandungan` | Email: `dokter.kandungan@puskesmas.test` | Password: `DokterKd1!`
 - **Tanggung Jawab:**
   - **Pelayanan KIA & Kandungan:** Melayani pemeriksaan antenatal care (ANC), kesehatan ibu hamil, nifas, dan pemeriksaan ginekologi.
   - **Peresepan Aman Kehamilan:** Sistem farmasi secara otomatis mengutamakan obat/suplemen ibu hamil dan menyaring atau memberi peringatan pada obat-obatan yang kontraindikasi dengan kehamilan.
@@ -87,7 +93,7 @@ Kata sandi awal **berbeda untuk tiap peran** dan dibaca seeder dari `.env` (`SEE
   - **Pemisahan Akses Poli:** Dokter kandungan hanya melihat antrean, resep, dan konsultasi pada Poli Kandungan demi menjaga kerahasiaan medis (*patient confidentiality*).
 
 ### 5. Apoteker (Instalasi Farmasi & Gudang Obat)
-- **Akun Bawaan:** `apoteker`
+- **Kredensial Login:** Username: `apoteker` | Email: `apoteker@puskesmas.test` | Password: `Apt3ker1!`
 - **Tanggung Jawab:**
   - **Resep Masuk Digital:** Menerima resep pasien seketika (*real-time WebSocket/polling*) setelah dokter menyelesaikannya di ruang periksa.
   - **Peracikan & Verifikasi:** Memverifikasi dosis, interaksi obat, dan ketersediaan fisik sebelum obat disiapkan.
@@ -96,7 +102,7 @@ Kata sandi awal **berbeda untuk tiap peran** dan dibaca seeder dari `.env` (`SEE
   - **Formularium Puskesmas:** Memantau daftar 20 obat formularium standar puskesmas (OBT-001 s.d. OBT-020).
 
 ### 6. Petugas Loket (Pendaftaran & Front Office)
-- **Akun Bawaan:** `loket`
+- **Kredensial Login:** Username: `loket` | Email: `loket@puskesmas.test` | Password: `Lok3tPkm!`
 - **Tanggung Jawab:**
   - **Registrasi Pasien Baru Walk-In:** Mendaftarkan pasien yang datang langsung tanpa aplikasi, otomatis menerbitkan Nomor Rekam Medis (No. RM) dengan format standar `RM-XXXXXX`.
   - **Pencarian Data Pasien:** Mencari data rekam medis pasien berdasarkan NIK, No. RM, No. KK, No. BPJS, atau nama.
@@ -105,7 +111,8 @@ Kata sandi awal **berbeda untuk tiap peran** dan dibaca seeder dari `.env` (`SEE
   - **Penerimaan Pengaduan Awal:** Mencatat pengaduan atau keluhan dari warga yang datang ke loket secara langsung.
 
 ### 7. Pasien (Masyarakat / Pengguna Layanan)
-- **Akun:** Terdaftar mandiri lewat halaman `/register` (atau akun seeder: `pasien`).
+- **Kredensial Login (Akun Contoh):** Username: `pasien` | Email: `pasien@puskesmas.test` | Password: `Pas1en01!`
+- **Pendaftaran Akun Baru:** Masyarakat umum dapat mendaftar mandiri via menu `/register`.
 - **Fitur & Hak Layanan:**
   - **Registrasi Terverifikasi:** Pendaftaran berbasis NIK (16 digit) dan No. KK dengan perlindungan anti-duplikasi data.
   - **Data Kontak Terkunci:** Nomor HP dan Alamat bersifat *disabled / read-only* di menu profil setelah akun dibuat untuk menjamin keaslian identitas domisili rekam medis resmi puskesmas.
