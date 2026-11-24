@@ -28,23 +28,125 @@ lalu `http://localhost:8000`.
 
 Database `puskesmas` langsung terlihat di HeidiSQL/phpMyAdmin Laragon. Pengaturan koneksi ada di `.env` (`DB_DATABASE=puskesmas`, user `root`, tanpa sandi).
 
-## Login & 7 peran
+## Login & 7 Peran Pengguna
 
-Tidak ada akun demo di halaman login. Semua peran masuk dari **gateway** `/login` (username **atau** email, password dengan tombol tampil/sembunyi, *Ingat saya*, *Lupa password?*, dan verifikasi soal hitung). Versi kartu ringkas untuk alur pasien ada di `/pasien/masuk` (endpoint sama). **Registrasi hanya untuk pasien** (`/register`); akun petugas dibuat Super Admin.
+Tidak ada akun demo di halaman login. Semua peran masuk dari **gateway tunggal** `/login` (username **atau** email, password dengan tombol tampil/sembunyi, *Ingat saya*, *Lupa password?*, dan verifikasi captcha hitung). Versi kartu ringkas untuk alur pasien ada di `/pasien/masuk` (endpoint sama). **Registrasi mandiri hanya untuk pasien** (`/register`); akun seluruh staf dibuat dan dikelola oleh Super Admin.
 
-| Username | Peran |
-|---|---|
-| `superadmin` | Super Admin (pihak Puskesmas) |
-| `admin` | Admin Puskesmas (operasional) |
-| `dr.umum`, `dr.umum2` | Dokter Umum |
-| `dr.kandungan` | Dokter Kandungan |
-| `apoteker` | Apoteker / Farmasi |
-| `loket` | Petugas Loket |
-| `pasien` | Pasien |
+| Username | Peran | Poli / Unit Kerja | Deskripsi Tugas Utama |
+|---|---|---|---|
+| `superadmin` | Super Admin | Pimpinan & IT Puskesmas | Otoritas penuh sistem, kelola akun staf, RBAC, audit, & pengaturan faskes |
+| `admin` | Admin Puskesmas | Tata Usaha & Operasional | Jadwal praktik, pengumuman, tanggapan aduan, kirim alert, & laporan |
+| `dr.umum`, `dr.umum2` | Dokter Umum | Poli Umum | Pemanggilan antrean poli, pemeriksaan fisik, diagnosis, & resep digital |
+| `dr.kandungan` | Dokter Kandungan | Poli Kandungan / KIA | Pemeriksaan ANC/kehamilan, resep aman bumil, & konsultasi KIA |
+| `apoteker` | Apoteker / Farmasi | Instalasi Farmasi | Penerimaan resep digital, peracikan, penyerahan obat, & stok obat |
+| `loket` | Petugas Loket | Pendaftaran & Front Office | Registrasi walk-in, pencarian No. RM, check-in QR (HMAC), & pantau antrean |
+| `pasien` | Pasien | Pengguna Layanan | Daftar berobat online, e-tiket QR, pantau antrean, resep, avatar profil |
 
 Kata sandi awal **berbeda untuk tiap peran** dan dibaca seeder dari `.env` (`SEED_PASSWORD_SUPER_ADMIN`, `…_ADMIN`, `…_DOKTER_UMUM`, `…_DOKTER_KANDUNGAN`, `…_APOTEKER`, `…_LOKET`, `…_PASIEN`). Ganti setelah login pertama lewat **Profil**. Jika `.env` baru disalin dari `.env.example`, isi dulu nilai-nilai tersebut (min. 8 karakter) sebelum `migrate --seed`.
 
-**Pendaftaran tanpa data ganda:** username, email, NIK, nama lengkap, atau Nomor KK yang sudah terdaftar langsung diarahkan ke halaman masuk dengan pesan dan tautan *Lupa password* (peringatan juga muncul saat mengetik). Cek nama dan No. KK bisa dimatikan di **Pengaturan** (mis. agar anggota satu keluarga bisa mendaftar sendiri-sendiri). Pasien yang dulu didaftarkan loket tanpa akun tetap bisa menautkan akun lewat NIK yang sama.
+---
+
+## Rincian Peran Dokter, Staf, & Pasien
+
+### 1. Super Admin (Pimpinan Puskesmas & Administrator Sistem)
+- **Akun Bawaan:** `superadmin`
+- **Tanggung Jawab:**
+  - **Kelola Akun Staf:** Membuat akun baru dokter, apoteker, loket, dan admin; mengatur status aktif/nonaktif, serta membuka blokir akun yang terkunci akibat salah sandi.
+  - **Manajemen RBAC (Role-Based Access Control):** Mengatur hak akses dan izin granular per peran melalui menu **Peran & Izin**.
+  - **Audit & Keamanan:** Memantau seluruh jejak aktivitas pengguna (*Audit Log*), histori login staf/pasien, pengunduhan data pasien, dan akses dokumen privat (foto KTP).
+  - **Pengaturan Puskesmas:** Mengonfigurasi identitas faskes (nama puskesmas, kode faskes, alamat, no. telepon, logo, serta nama & NIP Kepala Puskesmas untuk tanda tangan laporan resmi).
+  - **Template Notifikasi & Komunikasi:** Mengatur template pesan WhatsApp dan notifikasi internal untuk setiap langkah alur pelayanan.
+  - **Laporan Komprehensif:** Mengakses dan mengekspor laporan bulanan kunjungan, poli, dokter, dan pemakaian obat dalam format Excel (.xlsx) dan PDF resmi.
+
+### 2. Admin Puskesmas (Tata Usaha & Operasional Harian)
+- **Akun Bawaan:** `admin`
+- **Tanggung Jawab:**
+  - **Jadwal Praktik Dokter:** Menentukan jadwal dinas dokter umum dan dokter kandungan (hari praktik, jam mulai, jam selesai, dan kuota pasien harian).
+  - **Pengumuman Publik:** Mempublikasikan informasi kesehatan, jadwal libur pelayanan, atau agenda vaksinasi/posyandu ke beranda publik.
+  - **Pengelolaan Pengaduan Masyarakat:** Memproses keluhan pasien, menugaskan tindak lanjut, dan memberikan tanggapan resmi atas aduan layanan.
+  - **Kirim Alert Darurat:** Mengirimkan notifikasi darurat/siaran khusus (*broadcast alert*) ke seluruh petugas puskesmas atau peran tertentu.
+  - **Laporan Operasional:** Memantau statistik kunjungan dan mengunduh berkas laporan bulanan faskes.
+
+### 3. Dokter Umum (Poli Umum)
+- **Akun Bawaan:** `dr.umum`, `dr.umum2`
+- **Tanggung Jawab:**
+  - **Antrean Poli Real-Time:** Melihat daftar pasien Poli Umum yang telah melakukan check-in di loket.
+  - **Panggilan Pasien:** Memanggil nomor antrean berikutnya (suara panggilan dan nomor antrean langsung terupdate di layar monitor ruang tunggu).
+  - **Pemeriksaan Medis:** Mencatat anamnesis, keluhan utama, diagnosis klinis, dan tindakan medis pasien.
+  - **E-Resep Cerdas (Smart Prescription):** Menerbitkan resep obat digital yang langsung terintegrasi ke instalasi farmasi. Dilengkapi asisten rekomendasi obat berbasis graf pasangan obat, kesesuaian diagnosis, dan ketersediaan stok formularium.
+  - **Rekam Medis Pasien:** Meninjau riwayat kunjungan, keluhan masa lalu, dan catatan obat pasien sebelumnya.
+  - **Konsultasi Online:** Menjawab pesan konsultasi medis daring yang diajukan oleh pasien Poli Umum.
+  - **Jadwal Saya:** Memeriksa jadwal dinas dan kuota praktik harian pribadi.
+
+### 4. Dokter Spesialis Kandungan / KIA (Poli Kandungan)
+- **Akun Bawaan:** `dr.kandungan`
+- **Tanggung Jawab:**
+  - **Pelayanan KIA & Kandungan:** Melayani pemeriksaan antenatal care (ANC), kesehatan ibu hamil, nifas, dan pemeriksaan ginekologi.
+  - **Peresepan Aman Kehamilan:** Sistem farmasi secara otomatis mengutamakan obat/suplemen ibu hamil dan menyaring atau memberi peringatan pada obat-obatan yang kontraindikasi dengan kehamilan.
+  - **Telekonsultasi Ibu Hamil:** Memberikan respons konsultasi online mengenai keluhan kehamilan dan persiapan persalinan.
+  - **Pemisahan Akses Poli:** Dokter kandungan hanya melihat antrean, resep, dan konsultasi pada Poli Kandungan demi menjaga kerahasiaan medis (*patient confidentiality*).
+
+### 5. Apoteker (Instalasi Farmasi & Gudang Obat)
+- **Akun Bawaan:** `apoteker`
+- **Tanggung Jawab:**
+  - **Resep Masuk Digital:** Menerima resep pasien seketika (*real-time WebSocket/polling*) setelah dokter menyelesaikannya di ruang periksa.
+  - **Peracikan & Verifikasi:** Memverifikasi dosis, interaksi obat, dan ketersediaan fisik sebelum obat disiapkan.
+  - **Penyerahan Obat:** Menyerahkan obat kepada pasien di loket farmasi disertai edukasi aturan pakai. Sistem secara otomatis mencatat waktu penyerahan dan memotong stok obat di database.
+  - **Manajemen Inventaris Obat & Stok:** Mengelola master data obat (CRUD obat: nama obat, satuan tablet/botol/strip, kategori, harga, dan peringatan stok kritis).
+  - **Formularium Puskesmas:** Memantau daftar 20 obat formularium standar puskesmas (OBT-001 s.d. OBT-020).
+
+### 6. Petugas Loket (Pendaftaran & Front Office)
+- **Akun Bawaan:** `loket`
+- **Tanggung Jawab:**
+  - **Registrasi Pasien Baru Walk-In:** Mendaftarkan pasien yang datang langsung tanpa aplikasi, otomatis menerbitkan Nomor Rekam Medis (No. RM) dengan format standar `RM-XXXXXX`.
+  - **Pencarian Data Pasien:** Mencari data rekam medis pasien berdasarkan NIK, No. RM, No. KK, No. BPJS, atau nama.
+  - **Check-in Antrean QR:** Memindai e-tiket antrean pasien via scanner barcode atau kamera web. Tiket diverifikasi keasliannya menggunakan tanda tangan kriptografi HMAC-SHA256 untuk mencegah pemalsuan antrean.
+  - **Pendaftaran Berobat Hari Ini:** Menerbitkan nomor antrean poli bagi pasien yang datang langsung ke puskesmas.
+  - **Penerimaan Pengaduan Awal:** Mencatat pengaduan atau keluhan dari warga yang datang ke loket secara langsung.
+
+### 7. Pasien (Masyarakat / Pengguna Layanan)
+- **Akun:** Terdaftar mandiri lewat halaman `/register` (atau akun seeder: `pasien`).
+- **Fitur & Hak Layanan:**
+  - **Registrasi Terverifikasi:** Pendaftaran berbasis NIK (16 digit) dan No. KK dengan perlindungan anti-duplikasi data.
+  - **Data Kontak Terkunci:** Nomor HP dan Alamat bersifat *disabled / read-only* di menu profil setelah akun dibuat untuk menjamin keaslian identitas domisili rekam medis resmi puskesmas.
+  - **Avatar Foto Profil:** Pasien dapat menampilkan dan mengunggah foto profil sendiri dengan format standar `.png`, `.jpg`, atau `.webp` (maks. 2 MB), yang tampil di kartu profil, sidebar menu, dan bilah atas.
+  - **Daftar Berobat Online:** Mengambil nomor antrean berobat dari rumah hingga 7 hari ke depan (H-0 s.d. H+7).
+  - **E-Tiket QR Kriptografis:** Mengunduh tiket digital ber-QR code HMAC untuk ditunjukkan saat check-in di loket puskesmas.
+  - **Pemantauan Antrean Langsung:** Melihat estimasi sisa antrean di depan dan status panggilan secara live di halaman *Antrean Saya*.
+  - **Rekam Resep & Obat:** Melihat riwayat pemeriksaan, diagnosa dokter, serta petunjuk aturan minum obat dari apoteker.
+  - **Konsultasi Daring:** Mengirim pertanyaan keluhan kesehatan awal langsung ke dokter poli terkait.
+  - **Pengaduan Online:** Menyampaikan kritik/saran layanan langsung ke pihak manajemen puskesmas.
+  - **Hak Privasi (UU PDP):** Mengunduh salinan seluruh data pribadi dan riwayat medis miliknya dalam format JSON resmi melalui menu **Profil → Unduh data saya**.
+
+---
+
+## Hubungan dan Interkoneksi Antar-Peran
+
+Pelayanan di Puskesmas Sehat mengintegrasikan seluruh peran dalam satu alur kerja berkelanjutan (*closed-loop workflow*):
+
+```mermaid
+flowchart TD
+  P["Pasien (Online / Walk-in)"] -->|"1. Daftar / Ambil Antrean"| L["Petugas Loket"]
+  L -->|"2. Verifikasi KTP / Scan QR Tiket"| D["Dokter (Poli Umum / Kandungan)"]
+  D -->|"3. Panggil & Periksa Pasien"| D
+  D -->|"4. Terbitkan E-Resep Cerdas"| A["Apoteker (Farmasi)"]
+  A -->|"5. Racik & Serahkan Obat"| P
+  
+  subAdmin["Super Admin & Admin"] -.->|"Monitoring, Jadwal, RBAC, & Laporan"| L
+  subAdmin -.->|"Jadwal Praktik & Audit"| D
+  subAdmin -.->|"Manajemen Stok & Formularium"| A
+  P -.->|"Pengaduan & Konsultasi Online"| subAdmin
+```
+
+1. **Pasien** mengambil antrean secara mandiri lewat web/ponsel atau datang langsung ke **Loket**.
+2. **Petugas Loket** memverifikasi identitas pasien dan melakukan check-in via pemindaian QR tiket ber-HMAC.
+3. Status pasien otomatis berubah menjadi *Hadir* dan muncul di layar kerja **Dokter** poli tujuan.
+4. **Dokter** memanggil pasien (layar antrean publik di ruang tunggu otomatis bersuara dan menampilkan nomor panggil), melakukan pemeriksaan, dan menerbitkan e-resep digital.
+5. Resep langsung masuk ke layar **Apoteker** secara real-time (*WebSocket/polling*).
+6. **Apoteker** menyiapkan obat, menyerahkannya kepada pasien di loket farmasi, dan stok obat di database langsung berkurang otomatis.
+7. Seluruh interaksi tercatat dalam log audit dan dihimpun ke dalam laporan bulanan otomatis yang dapat ditinjau oleh **Admin** dan **Super Admin**.
+
+---
 
 ## Kode OTP lewat email (SMTP)
 
