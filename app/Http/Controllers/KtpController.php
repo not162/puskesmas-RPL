@@ -13,7 +13,9 @@ class KtpController extends Controller
     {
         abort_unless($pasien->foto_ktp && Storage::disk('local')->exists($pasien->foto_ktp), 404);
         AuditLog::catat('lihat_ktp', $pasien);
-        return Storage::disk('local')->response($pasien->foto_ktp, 'ktp-'.$pasien->no_rm.'.'.pathinfo($pasien->foto_ktp, PATHINFO_EXTENSION), [
+        /** @var \Illuminate\Filesystem\FilesystemAdapter $disk */
+        $disk = Storage::disk('local');
+        return $disk->response($pasien->foto_ktp, 'ktp-'.$pasien->no_rm.'.'.pathinfo($pasien->foto_ktp, PATHINFO_EXTENSION), [
             'Cache-Control' => 'no-store, private',
         ]);
     }

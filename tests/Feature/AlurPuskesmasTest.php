@@ -13,9 +13,12 @@ use App\Support\Hmac;
 use App\Mail\KodeOtpMail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Filesystem\FilesystemAdapter;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Tests\TestCase;
 
 class AlurPuskesmasTest extends TestCase
@@ -68,7 +71,9 @@ class AlurPuskesmasTest extends TestCase
             // OTP hanya untuk lupa password: semua peran (termasuk pasien) langsung masuk
             $res = $this->withSession(['captcha' => 7])->post('/login', ['login' => $username, 'password' => $this->sandi($p), 'captcha' => 7]);
             $res->assertRedirect('/dashboard');
-            $this->assertSame($p, auth()->user()->role());
+            /** @var Akun $user */
+            $user = Auth::user();
+            $this->assertSame($p, $user->role());
             $this->get('/dashboard')->assertOk();
             $this->post('/logout');
         }
@@ -117,7 +122,9 @@ class AlurPuskesmasTest extends TestCase
     {
         $admin = $this->akun('superadmin');
         $xlsx = $this->actingAs($admin)->get('/laporan/xlsx')->assertOk()->assertDownload('laporan-puskesmas-'.now()->format('Y-m').'.xlsx');
-        $path = $xlsx->baseResponse->getFile()->getPathname();
+        /** @var BinaryFileResponse $fileResponse */
+        $fileResponse = $xlsx->baseResponse;
+        $path = $fileResponse->getFile()->getPathname();
         $book = \PhpOffice\PhpSpreadsheet\IOFactory::load($path);
         $this->assertSame(['Ringkasan', 'Per Poli', 'Per Dokter', 'Obat Keluar', 'Harian'], $book->getSheetNames());
         $this->assertStringContainsString('LAPORAN BULANAN', $book->getSheetByName('Per Poli')->getCell('A3')->getValue());
@@ -386,7 +393,9 @@ class AlurPuskesmasTest extends TestCase
         $siti = Akun::where('username', 'siti.aminah')->first();
         $this->assertSame('pasien', $siti->role());
         $this->assertSame('siti.aminah@gmail.com', $siti->email);
-        Storage::disk('local')->assertExists($siti->pasien->foto_ktp);
+        /** @var FilesystemAdapter $diskLocal */
+        $diskLocal = Storage::disk('local');
+        $diskLocal->assertExists($siti->pasien->foto_ktp);
         // Username duplikat ditolak
         $this->post('/logout');
         $this->withSession(['captcha' => 5])->post('/register', ['captcha' => 5] + ['username' => 'siti.aminah', 'nik' => '3171010101990003'])->assertRedirect('/login')->assertSessionHas('duplikat', 'Username');
@@ -579,7 +588,9 @@ class AlurPuskesmasTest extends TestCase
 
         $pasienAkun->refresh();
         $this->assertNotNull($pasienAkun->foto);
-        \Illuminate\Support\Facades\Storage::disk('public')->assertExists($pasienAkun->foto);
+        /** @var FilesystemAdapter $diskPublic */
+        $diskPublic = Storage::disk('public');
+        $diskPublic->assertExists($pasienAkun->foto);
 
         // 4. Endpoint avatar mengembalikan file foto yang diunggah
         $this->get('/avatar/'.$pasienAkun->id_akun)->assertOk();

@@ -71,7 +71,9 @@ class ProfilController extends Controller
     public function avatar(Akun $akun)
     {
         if ($akun->foto && Storage::disk('public')->exists($akun->foto)) {
-            return Storage::disk('public')->response($akun->foto, null, [
+            /** @var \Illuminate\Filesystem\FilesystemAdapter $disk */
+            $disk = Storage::disk('public');
+            return $disk->response($akun->foto, null, [
                 'Cache-Control' => 'public, max-age=86400',
             ]);
         }
