@@ -75,6 +75,7 @@ class PasienController extends Controller
             'keluhan_awal' => $keluhan, 'waktu_hadir' => now(),
         ]);
         Notifier::pasien($p, 6, [], null, 'success', "Antrian {$a->nomor} dibuat di loket dan sudah check-in.");
+        Notifier::peran(Notifier::peranDokterUntuk($sp->nama), 'Pasien siap diperiksa', "Antrian {$a->nomor} ({$p->nama}) hadir di {$sp->poli}.", route('dokter.antrian'));
         return $a;
     }
 

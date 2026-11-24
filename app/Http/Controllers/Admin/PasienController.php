@@ -20,8 +20,14 @@ class PasienController extends Controller
     public function destroy(Pasien $pasien)
     {
         $nama = $pasien->nama;
-        $pasien->akun?->delete();
-        $pasien->delete();
+        try {
+            \Illuminate\Support\Facades\DB::transaction(function () use ($pasien) {
+                $pasien->akun?->delete();
+                $pasien->delete();
+            });
+        } catch (\Illuminate\Database\QueryException) {
+            return $this->kembali('warning', 'Tidak dapat dihapus', "Pasien {$nama} memiliki riwayat pelayanan atau resep.");
+        }
         return $this->kembali('success', 'Pasien dihapus', "Data {$nama} beserta riwayatnya dihapus.");
     }
 }

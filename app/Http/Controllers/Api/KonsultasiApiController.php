@@ -63,5 +63,13 @@ class KonsultasiApiController extends Controller
         Notifier::pasien($konsultasi->pasien, 4, ['dokter' => $d->nama], null, 'success');
         return ['data' => $this->json($konsultasi->fresh(['spesialisasi', 'dokter']))];
     }
+
+    public function destroy(Request $request, Konsultasi $konsultasi)
+    {
+        $this->boleh($request, $konsultasi);
+        abort_unless($konsultasi->status === 'menunggu', 422, 'Hanya konsultasi berstatus menunggu yang dapat dibatalkan.');
+        $konsultasi->delete();
+        return response()->noContent();
+    }
 }
 

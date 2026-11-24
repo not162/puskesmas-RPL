@@ -317,3 +317,30 @@ video.scan { width: 100%; max-width: 420px; border-radius: 12px; background: #00
 .pw-toggle { display: grid; place-items: center; line-height: 0; }
 .pw-toggle .ico { position: static; transform: none; }
 .input-group .input[type="password"], .input-group .input[type="text"]:has(+ .pw-toggle) { padding-right: 42px; }
+
+/* Aktivitas klik tombol & status pemrosesan aksi */
+.btn-clicked, .btn:active {
+  transform: scale(0.97);
+  filter: brightness(0.95);
+  transition: transform 0.08s ease, filter 0.08s ease;
+}
+.btn.loading {
+  position: relative;
+  pointer-events: none;
+  opacity: 0.85;
+}
+.btn.loading::after {
+  content: '';
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-left: 6px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: btn-spin 0.6s linear infinite;
+  vertical-align: middle;
+}
+@keyframes btn-spin {
+  to { transform: rotate(360deg); }
+}

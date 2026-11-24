@@ -13,6 +13,7 @@ Route::prefix('v1')->group(function () {
     Route::get('public/dokter', [Api\PublicApiController::class, 'dokter']);
     Route::get('public/pengumuman', [Api\PublicApiController::class, 'pengumuman']);
     Route::get('public/alur', [Api\PublicApiController::class, 'alur']);
+    Route::get('realtime', \App\Http\Controllers\RealtimeController::class);
 
     // Kiosk / layar TV — permintaan wajib ditandatangani HMAC-SHA256 (X-Kiosk-Id, X-Timestamp, X-Signature)
     Route::middleware(['hmac', 'throttle:120,1,kiosk'])->prefix('kiosk')->group(function () {
@@ -44,6 +45,7 @@ Route::prefix('v1')->group(function () {
         Route::post('konsultasi', [Api\KonsultasiApiController::class, 'store'])->middleware('izin:konsultasi.ajukan');
         Route::get('konsultasi/{konsultasi}', [Api\KonsultasiApiController::class, 'show']);
         Route::put('konsultasi/{konsultasi}', [Api\KonsultasiApiController::class, 'update'])->middleware('izin:konsultasi.tanggapi');
+        Route::delete('konsultasi/{konsultasi}', [Api\KonsultasiApiController::class, 'destroy'])->middleware('izin:konsultasi.ajukan');
 
         // Resep
         Route::get('resep', [Api\ResepApiController::class, 'index']);

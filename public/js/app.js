@@ -21,7 +21,23 @@ const ICON = {
     ikonTema();
   }));
 
-  /* ---------- Toast ---------- */
+  /* ---------- Toast & Alert Aktivitas ---------- */
+  const soundBeep = (freqs = [600], dur = 0.05, vol = 0.08) => {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      freqs.forEach((f, idx) => {
+        const o = ctx.createOscillator(), g = ctx.createGain(), t = ctx.currentTime + idx * dur;
+        o.frequency.value = f;
+        o.connect(g);
+        g.connect(ctx.destination);
+        g.gain.setValueAtTime(vol, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+        o.start(t);
+        o.stop(t + dur);
+      });
+    } catch (e) {}
+  };
+
   const TI = { success: ['c-green', 'check'], warning: ['c-amber', 'alert'], danger: ['c-red', 'x'], info: ['c-blue', 'info'] };
   window.toast = (tipe = 'info', judul = '', pesan = '', ms = 5500) => {
     let box = $('.toasts'); if (!box) { box = document.createElement('div'); box.className = 'toasts'; document.body.append(box); }
@@ -32,8 +48,33 @@ const ICON = {
     $('b', el).textContent = judul; $('p', el).textContent = pesan;
     const tutup = () => { el.classList.add('out'); setTimeout(() => el.remove(), 250); };
     $('.x', el).onclick = tutup; box.append(el); setTimeout(tutup, ms);
+
+    // Suara alert feedback untuk setiap notifikasi aksi
+    if (tipe === 'success') soundBeep([587, 880], 0.1, 0.08);
+    else if (tipe === 'warning' || tipe === 'danger') soundBeep([440, 310], 0.12, 0.1);
+    else soundBeep([660], 0.06, 0.05);
   };
   (window.__ALERTS || []).forEach(a => toast(a.tipe, a.judul, a.pesan));
+
+  /* ---------- Alert Aktivitas Setiap Klik Tombol ---------- */
+  document.addEventListener('click', e => {
+    const b = e.target.closest('button, .btn, [role="button"], input[type="submit"]');
+    if (!b || b.disabled) return;
+
+    // Feedback haptik/audio klik
+    soundBeep([520], 0.04, 0.04);
+
+    // Efek visual klik aktif
+    b.classList.remove('btn-clicked');
+    void b.offsetWidth;
+    b.classList.add('btn-clicked');
+    setTimeout(() => b.classList.remove('btn-clicked'), 350);
+
+    // Notifikasi alert khusus jika atribut data-alert-click disetel
+    if (b.dataset.alertClick) {
+      toast('info', b.dataset.alertJudul || 'Aktivitas', b.dataset.alertClick, 3000);
+    }
+  });
 
   /* ---------- Modal konfirmasi untuk aksi penting (hapus, batal, serahkan) ---------- */
   const modal = $('#confirm-modal');
@@ -57,9 +98,13 @@ const ICON = {
   }
   document.addEventListener('keydown', e => { if (e.key === 'Escape') { modal?.classList.remove('open'); $$('.menu.open').forEach(m => m.classList.remove('open')); } });
 
-  /* ---------- Cegah submit ganda ---------- */
+  /* ---------- Cegah submit ganda & Indikator aksi ---------- */
   document.addEventListener('submit', e => {
     if (e.defaultPrevented) return;
+    const sub = e.target.querySelector('button[type=submit], input[type=submit]');
+    if (sub) {
+      sub.classList.add('loading');
+    }
     $$('button[type=submit]', e.target).forEach(b => { setTimeout(() => { b.disabled = true; }, 0); });
   });
 
