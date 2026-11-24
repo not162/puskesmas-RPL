@@ -203,6 +203,15 @@ textarea.input { min-height: 96px; resize: vertical; }
 .page-h { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
 .page-h p { margin: 4px 0 0; color: var(--muted); }
 .mobile-only { display: none; }
+.scrim {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(2px);
+  z-index: 999;
+}
+.scrim.show { display: block; }
 
 @media (max-width: 992px) {
   .shell { display: flex; flex-direction: column; width: 100%; }
@@ -220,15 +229,6 @@ textarea.input { min-height: 96px; resize: vertical; }
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
   }
   .sidebar.open { transform: translateX(0); }
-  .scrim {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.55);
-    backdrop-filter: blur(2px);
-    z-index: 999;
-  }
-  .scrim.show { display: block; }
   .mobile-only { display: inline-flex; }
   .content { padding: 18px 14px 100px; width: 100%; max-width: 100%; box-sizing: border-box; }
   .appbar { padding: 0 14px; }

@@ -50,6 +50,7 @@
     return false;
   };
 @endphp
+<div class="scrim"></div>
 <div class="shell">
   <aside class="sidebar" aria-label="Menu samping">
     <a href="{{ route('beranda') }}" class="brand"><span class="brand-mark"><x-ico n="cross"/></span> {{ $namaPkm }}</a>
@@ -67,7 +68,6 @@
       <button class="side-link btn-block" style="border:0;background:none;cursor:pointer;font:inherit"><x-ico n="logout"/> Keluar</button>
     </form>
   </aside>
-  <div class="scrim"></div>
   <div class="main">
     <header class="appbar">
       <button class="btn btn-icon btn-ghost mobile-only" data-side aria-label="Buka menu"><x-ico n="menu"/></button>

@@ -21,7 +21,7 @@
       if (s) document.documentElement.classList.add('tanpa-pembuka'); })();
   </script>
   <link rel="preload" href="{{ asset('vendor/fonts/plus-jakarta-sans-latin-600.woff2') }}" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="{{ asset('css/app.css') }}?v=6">
+  <link rel="stylesheet" href="{{ asset('css/app.css') }}?v=7">
   <link rel="stylesheet" href="{{ asset('css/landing.css') }}?v=6">
   @stack('head')
 </head>
